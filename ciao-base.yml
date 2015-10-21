@@ -1,0 +1,66 @@
+---
+# Configure ciao base services
+
+- name: Deploy etcd cluster
+  hosts: etcd
+  sudo: True
+  vars:
+    etcd_cluster: "{% for host in groups.etcd %}etcd-{{ hostvars[host].inventory_hostname }}=http://{{ hostvars[host].ansible_default_ipv4.address }}:2380{% if not loop.last %},{% endif %}{% endfor %}"
+  tasks:
+    - name: Install python pip
+      apt: name=python-pip update_cache=yes
+    - name: Install docker-py as a workaround for Ansible issue
+      pip: name=docker-py version=1.2.3
+    - name: Install etcd
+      docker:
+        name: ciao-etcd
+        image: quay.io/coreos/etcd:v2.0.8
+        state: started
+        restart_policy: always
+        ports:
+        - "4001:4001"
+        - "2380:2380"
+        - "2379:2379"
+        env:
+          ETCD_NAME: etcd-{{ inventory_hostname }}
+          ETCD_INITIAL_ADVERTISE_PEER_URLS: http://{{ ansible_default_ipv4.address }}:2380
+          ETCD_ADVERTISE_CLIENT_URLS: http://{{ ansible_default_ipv4.address }}:2379,http://{{ ansible_default_ipv4.address }}:4001
+          ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379,http://0.0.0.0:4001
+          ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+          ETCD_INITIAL_CLUSTER_TOKEN: etcd-cluster-ciao
+          ETCD_INITIAL_CLUSTER: "{{ etcd_cluster }}"
+          ETCD_INITIAL_CLUSTER_STATE: new 
+
+- name: Deploy zookeeper cluster
+  hosts: zookeeper
+  sudo: True
+  vars:
+    zoo_config_directory: "/opt/ciao_zookeeper/conf"
+    zoo_config_file: "ciao_zoo.cfg"
+    zoo_data_directory: "/var/lib/ciao_zookeeper"
+  tasks:
+    - name: Create zookeeper configuration directory
+      command: mkdir {{ zoo_config_directory }}
+    - name: Create zookeeper data directory
+      command: mkdir {{ zoo_data_directory }}
+    - name: Install configuration file
+      template: src=templates/{{ zoo_config_file }}.j2 dest={{ zoo_config_directory }}/{{ zoo_config_file }}
+    - name: Install myid file
+      command: echo ???  > {{ zoo_data_directory }}/myid
+    - name: Install python pip
+      apt: name=python-pip update_cache=yes
+    - name: Install docker-py as a workaround for Ansible issue
+      pip: name=docker-py version=1.2.3
+    - name: Install zookeeper
+      docker:
+        name: ciao-zookeeper
+        image: jplock/zookeeper
+        state: started
+        restart_policy: always
+        ports:
+        - "2181:2181"
+        - "2888:2888"
+        - "3888:3888"
+        volumes:
+          {{ zoo_config_directory }}:/opt/zookeeper/conf
+          {{ zoo_data_directory }}:/tmp/zookeeper
