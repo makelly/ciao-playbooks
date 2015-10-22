@@ -36,7 +36,6 @@
   sudo: True
   vars:
     zoo_config_directory: "/opt/ciao_zookeeper/conf"
-    zoo_config_file: "ciao_zoo.cfg"
     zoo_data_directory: "/var/lib/ciao_zookeeper"
   tasks:
     - name: Create zookeeper configuration directory
@@ -44,9 +43,9 @@
     - name: Create zookeeper data directory
       command: mkdir {{ zoo_data_directory }}
     - name: Install configuration file
-      template: src=templates/{{ zoo_config_file }}.j2 dest={{ zoo_config_directory }}/{{ zoo_config_file }}
+      template: src=templates/zoo.cfg.j2 dest={{ zoo_config_directory }}/zoo.cfg
     - name: Install myid file
-      command: echo ???  > {{ zoo_data_directory }}/myid
+      command: echo {% for host in groups.zookeeper %}{% if host.inventory_hostname == inventory_hostname %}{{ loop.index }}{% endif %}{% endfor %} > {{ zoo_data_directory }}/myid
     - name: Install python pip
       apt: name=python-pip update_cache=yes
     - name: Install docker-py as a workaround for Ansible issue
