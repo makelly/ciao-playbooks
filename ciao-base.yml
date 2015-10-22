@@ -31,16 +31,16 @@
           ETCD_INITIAL_CLUSTER: "{{ etcd_cluster }}"
           ETCD_INITIAL_CLUSTER_STATE: new 
 
-- name: Deploy zookeeper cluster
+- name: Deploy ZooKeeper cluster
   hosts: zookeeper
   sudo: True
   vars:
     zoo_config_directory: "/opt/ciao_zookeeper/conf"
     zoo_data_directory: "/var/lib/ciao_zookeeper"
   tasks:
-    - name: Create zookeeper configuration directory
+    - name: Create ZooKeeper configuration directory
       command: mkdir {{ zoo_config_directory }}
-    - name: Create zookeeper data directory
+    - name: Create ZooKeeper data directory
       command: mkdir {{ zoo_data_directory }}
     - name: Install configuration file
       template: src=templates/zoo.cfg.j2 dest={{ zoo_config_directory }}/zoo.cfg
@@ -50,7 +50,7 @@
       apt: name=python-pip update_cache=yes
     - name: Install docker-py as a workaround for Ansible issue
       pip: name=docker-py version=1.2.3
-    - name: Install zookeeper
+    - name: Install ZooKeeper
       docker:
         name: ciao-zookeeper
         image: jplock/zookeeper
@@ -63,6 +63,32 @@
         volumes:
           {{ zoo_config_directory }}:/opt/zookeeper/conf
           {{ zoo_data_directory }}:/tmp/zookeeper
+
+- name: Deploy ActiveMQ cluster
+  hosts: activemq
+  sudo: True
+  vars:
+    activemq_config_directory: "/opt/ciao_activemq/conf"
+  tasks:
+    - name: Create ActiveMQ configuration directory
+      command: mkdir {{ activemq_config_directory }}
+    - name: Install configuration file
+      template: src=templates/activemq.xml.j2 dest={{ activemq_config_directory }}/activemq.xml
+    - name: Install python pip
+      apt: name=python-pip update_cache=yes
+    - name: Install docker-py as a workaround for Ansible issue
+      pip: name=docker-py version=1.2.3
+    - name: Install ActiveMQ
+      docker:
+        name: ciao-activemq
+        image: webcenter/activemq
+        state: started
+        restart_policy: always
+        ports:
+        - "8161:8161"
+        - "61616:61616"
+        volumes:
+          {{ activemq_config_directory }}:/opt/activemq/conf
 
 - name: Deploy Hawtio
   hosts: hawtio
