@@ -107,3 +107,20 @@
         restart_policy: always
         ports:
         - "9090:9090"
+
+- name: Deploy Kibana
+  hosts: kibana
+  sudo: True
+  tasks:
+    - name: Install python pip
+      apt: name=python-pip update_cache=yes
+    - name: Install docker-py as a workaround for Ansible issue
+      pip: name=docker-py version=1.2.3
+    - name: Install Kibana
+      docker:
+        name: ciao-kibana
+        image: kibana
+        state: started
+        restart_policy: always
+        ports:
+        - "5601:5601"
