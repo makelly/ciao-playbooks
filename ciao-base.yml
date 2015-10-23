@@ -3,6 +3,7 @@
 
 - name: Deploy ansible docker issues workaround
   hosts: all
+  sudo: True
   tasks:
     - name: Install python pip
       apt: name=python-pip state=present update_cache=yes cache_valid_time=3600
@@ -48,6 +49,8 @@
       file: path={{ zoo_data_directory }} state=directory
     - name: Install configuration file
       template: src=templates/zoo.cfg.j2 dest={{ zoo_config_directory }}/zoo.cfg
+    - name: Install logging configuration file
+      template: src=templates/zoo.log4j.properties.j2 dest={{ zoo_config_directory }}/log4j.properties
     - name: Install myid file
       template: src=templates/myid.j2 dest={{ zoo_data_directory }}/myid
     - name: Install ZooKeeper
