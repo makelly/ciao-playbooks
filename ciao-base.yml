@@ -61,8 +61,8 @@
         - "2888:2888"
         - "3888:3888"
         volumes:
-          {{ zoo_config_directory }}:/opt/zookeeper/conf
-          {{ zoo_data_directory }}:/tmp/zookeeper
+          "{{ zoo_config_directory }}":/opt/zookeeper/conf
+          "{{ zoo_data_directory }}":/tmp/zookeeper
 
 - name: Deploy ActiveMQ cluster
   hosts: activemq
