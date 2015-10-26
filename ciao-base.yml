@@ -10,6 +10,31 @@
     - name: Install docker-py as a workaround for Ansible issue
       pip: name=docker-py version=1.2.3 state=present
 
+- name: Deploy ELK
+  hosts: elk
+  sudo: True
+  vars:
+    logstash_config_directory: "/opt/ciao_logstash/conf"
+    elastic_data_directory: "/opt/ciao_elastic/data" 
+  tasks:
+    - name: Create Logstash configuration directory
+      file: path={{ logstash_config_directory }} state=directory
+    - name: Create Elastic data directory
+      file: path={{ elastic_data_directory }} state=directory
+    - name: Install Logstash configuration file
+      template: src=templates/logstash.cfg.j2 dest={{ logstash_config_directory }}/logstash.conf
+    - name: Install ELK stack
+      docker:
+        name: ciao-elk
+        image: willdurand/elk
+        state: started
+        restart_policy: always
+        ports:
+        - "8080:80"
+        volumes:
+        - "{{ logstash_config_directory }}:/etc/logstash"
+        - "{{ elastic_data_directory }}:/data"
+
 - name: Deploy etcd cluster
   hosts: etcd
   sudo: True
@@ -104,16 +129,3 @@
         restart_policy: always
         ports:
         - "9090:9090"
-
-- name: Deploy Kibana
-  hosts: kibana
-  sudo: True
-  tasks:
-    - name: Install Kibana
-      docker:
-        name: ciao-kibana
-        image: kibana
-        state: started
-        restart_policy: always
-        ports:
-        - "5601:5601"
