@@ -3,6 +3,17 @@ harpo ansible_ssh_host=10.210.162.22
 groucho ansible_ssh_host=10.210.162.28
 zeppo ansible_ssh_host=10.210.162.29
 
+[elk]
+chico
+
+[nagios]
+chico
+
+[logspout]
+harpo
+groucho
+zeppo
+
 [etcd]
 chico
 harpo
@@ -14,18 +25,8 @@ harpo
 groucho
 zeppo
 
-[hawtio]
-chico
-
 [activemq]
 harpo
 groucho
 zeppo
 
-[elk]
-chico
-
-[logspout]
-harpo
-groucho
-zeppo

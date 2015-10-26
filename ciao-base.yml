@@ -36,6 +36,19 @@
         - "{{ logstash_config_directory }}:/etc/logstash"
         - "{{ elastic_data_directory }}:/data"
 
+- name: Deploy Nagios
+  hosts: nagios
+  sudo: True
+  tasks:
+    - name: Install Nagios
+      docker:
+        name: ciao-nagios
+        image: cpuguy83/nagios
+        state: started
+        restart_policy: always
+        ports:
+        - "8081:80"
+
 - name: Deploy Logspout
   hosts: logspout
   sudo: True
@@ -114,6 +127,8 @@
   sudo: True
   vars:
     activemq_config_directory: "/opt/ciao_activemq/conf"
+    activemq_username: "smx"
+    activemq_password: "smx"
   tasks:
     - name: Create ActiveMQ configuration directory
       file: path={{ activemq_config_directory }} state=directory
@@ -133,16 +148,3 @@
         - "61614:61614"
         volumes:
         - "{{ activemq_config_directory }}:/opt/activemq/conf"
-
-- name: Deploy Hawtio
-  hosts: hawtio
-  sudo: True
-  tasks:
-    - name: Install hawtio
-      docker:
-        name: ciao-hawtio
-        image: fabric8/fabric8-console
-        state: started
-        restart_policy: always
-        ports:
-        - "9090:9090"
