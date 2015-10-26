@@ -22,7 +22,7 @@
     - name: Create Elastic data directory
       file: path={{ elastic_data_directory }} state=directory
     - name: Install Logstash configuration file
-      template: src=templates/logstash.cfg.j2 dest={{ logstash_config_directory }}/logstash.conf
+      template: src=templates/logstash.conf.j2 dest={{ logstash_config_directory }}/logstash.conf
     - name: Install ELK stack
       docker:
         name: ciao-elk
