@@ -1,4 +1,4 @@
-input { stdin { } }
+input { syslog { } }
 output {
   elasticsearch { host => localhost }
   stdout { codec => rubydebug }
