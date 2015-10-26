@@ -36,6 +36,22 @@
         - "{{ logstash_config_directory }}:/etc/logstash"
         - "{{ elastic_data_directory }}:/data"
 
+- name: Deploy Logspout
+  hosts: logspout
+  sudo: True
+  tasks:
+    - name: Install Logspout
+      docker:
+        name: ciao-logspout
+        image: gliderlabs/logspout
+        state: started
+        restart_policy: always
+        command: {% for host in groups.elk %}syslog://{{ hostvars[host].ansible_default_ipv4.address }}:514{% if not loop.last %},{% endif %}{% endfor %}
+        ports:
+        - "8000:80"
+        volumes:
+        - "/var/run/docker.sock:/tmp/docker.sock"
+
 - name: Deploy etcd cluster
   hosts: etcd
   sudo: True
