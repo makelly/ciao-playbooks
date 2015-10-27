@@ -59,7 +59,7 @@
         image: gliderlabs/logspout
         state: started
         restart_policy: always
-        command: {% for host in groups.elk %}syslog://{{ hostvars[host].ansible_default_ipv4.address }}:514{% if not loop.last %},{% endif %}{% endfor %}
+        command: "{% for host in groups.elk %}syslog://{{ hostvars[host].ansible_default_ipv4.address }}:514{% if not loop.last %},{% endif %}{% endfor %}"
         ports:
         - "8000:80"
         volumes:
@@ -126,9 +126,10 @@
   hosts: activemq
   sudo: True
   vars:
+    activemq_n_hosts: length(groups['activemq'])
     activemq_config_directory: "/opt/ciao_activemq/conf"
-    activemq_username: "smx"
-    activemq_password: "smx"
+    activemq_username: "ciao"
+    activemq_password: "ciao"
   tasks:
     - name: Create ActiveMQ configuration directory
       file: path={{ activemq_config_directory }} state=directory
