@@ -140,7 +140,7 @@
     - name: Install ActiveMQ
       docker:
         name: ciao-activemq
-        image: webcenter/activemq
+        image: hscic/ciao-activemq
         state: restarted
         restart_policy: always
         ports:
