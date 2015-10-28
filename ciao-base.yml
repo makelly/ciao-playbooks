@@ -27,7 +27,7 @@
       docker:
         name: ciao-elk
         image: willdurand/elk
-        state: started
+        state: restarted
         restart_policy: always
         ports:
         - "8080:80"
@@ -44,7 +44,7 @@
       docker:
         name: ciao-nagios
         image: cpuguy83/nagios
-        state: started
+        state: restarted
         restart_policy: always
         ports:
         - "8081:80"
@@ -57,7 +57,7 @@
       docker:
         name: ciao-logspout
         image: gliderlabs/logspout
-        state: started
+        state: restarted
         restart_policy: always
         command: "{% for host in groups.elk %}syslog://{{ hostvars[host].ansible_default_ipv4.address }}:514{% if not loop.last %},{% endif %}{% endfor %}"
         ports:
@@ -75,7 +75,7 @@
       docker:
         name: ciao-etcd
         image: quay.io/coreos/etcd:v2.0.8
-        state: started
+        state: restarted
         restart_policy: always
         ports:
         - "4001:4001"
@@ -112,7 +112,7 @@
       docker:
         name: ciao-zookeeper
         image: jplock/zookeeper
-        state: started
+        state: restarted
         restart_policy: always
         ports:
         - "2181:2181"
@@ -141,7 +141,7 @@
       docker:
         name: ciao-activemq
         image: webcenter/activemq
-        state: started
+        state: restarted
         restart_policy: always
         ports:
         - "8161:8161"
