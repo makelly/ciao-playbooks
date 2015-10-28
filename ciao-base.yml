@@ -61,7 +61,7 @@
         restart_policy: always
         command: "{% for host in groups.elk %}syslog://{{ hostvars[host].ansible_default_ipv4.address }}:514{% if not loop.last %},{% endif %}{% endfor %}"
         ports:
-        - "8000:80"
+        - "8000:8000"
         volumes:
         - "/var/run/docker.sock:/tmp/docker.sock"
 
