@@ -64,8 +64,9 @@
         <persistenceAdapter>
           <replicatedLevelDB
             replicas="{{ activemq_n_hosts }}"
-            bind="tcp://{{ ansible_default_ipv4.address }}:61619"
+            bind="tcp://0.0.0.0:61619"
             zkAddress="{% for host in groups.zookeeper %}{{ hostvars[host].ansible_default_ipv4.address }}:2181{% if not loop.last %},{% endif %}{% endfor %}"
+            hostname="{{ ansible_default_ipv4.address }}"
             />
         </persistenceAdapter>
 
