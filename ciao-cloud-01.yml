@@ -1,0 +1,5 @@
+---
+# Ciao cloud deployment
+
+- include: ciao-base.yml
+- include: ciao-pack-01
