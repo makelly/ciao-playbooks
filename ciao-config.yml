@@ -1,0 +1,8 @@
+---
+# Ciao config variables
+etcd_root: "http://localhost:4001/v2/keys/"
+etcd_activemq_transport: "{{ etcd_root }}ciao-config/activemq-transport"
+activemq_username: "ciao"
+activemq_password: "ciao"
+
+

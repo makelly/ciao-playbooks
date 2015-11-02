@@ -2,4 +2,4 @@
 # Ciao cloud deployment
 
 - include: ciao-base.yml
-- include: ciao-pack-01
+- include: ciao-app-test.yml

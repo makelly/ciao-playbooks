@@ -1,0 +1,31 @@
+---
+# Ciao pack for transfer of care document routing
+# Assumes ciao-base.yml is run first
+
+- name: Some tests
+  hosts: localhost
+  sudo: True
+  tasks:
+  vars:
+    ciao_docs_parser_root: "test/"
+  vars_files:
+    - ciao-config.yml
+  tasks:
+    - name: Get etcd_root
+      debug: msg="{{ etcd_root }}"
+    - name: Get etcd_activemq_transport
+      debug: msg="{{ lookup('etcd', '{{ etcd_activemq_transport }}') }}     
+    - name: Set configuration item X
+      uri: url={{ etcd_root }}{{ ciao_docs_parser_root }}X method=PUT body="xx"
+    - name: Get configuration item x
+      debug: msg="{{ lookup('etcd', '{{ etcd_root }}{{ ciao_docs_parser_root }}X') }} 
+
+#- name: Deploy ciao-docs-parser
+#  hosts: ciao-docs-parser
+#  sudo: True
+#  vars:
+#    ciao_docs_parser_root: "ciao-docs-parser/v1/mike/"
+#  tasks:
+#    - name: Set configuration item X
+#      uri: url={{ etcd_root }}{{ ciao_docs_parser_root }}X method=PUT body="xx"
+
