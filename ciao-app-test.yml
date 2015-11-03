@@ -18,7 +18,12 @@
     - name: Set configuration item X
       uri: url={{ etcd_root }}{{ ciao_docs_parser_root }}X method=PUT body="xx"
     - name: Get configuration item x
-      debug: msg="{{ lookup('etcd', '{{ etcd_root }}{{ ciao_docs_parser_root }}X') }} 
+      debug: msg="{{ lookup('etcd', '{{ etcd_root }}{{ ciao_docs_parser_root }}X') }}" 
+
+
+      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
+
+
 
 #- name: Deploy ciao-docs-parser
 #  hosts: ciao-docs-parser
