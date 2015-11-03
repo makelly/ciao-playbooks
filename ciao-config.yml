@@ -4,5 +4,5 @@ etcd_root: "http://localhost:4001/v2/keys/"
 etcd_activemq_transport: "{{ etcd_root }}ciao-config/activemq-transport"
 activemq_username: "ciao"
 activemq_password: "ciao"
-
+activemq_transport: "failover:({% for host in groups.activemq %}tcp://{{ hostvars[host].ansible_default_ipv4.address }}:61616{% if not loop.last %},{% endif %}{% endfor %})"
 
