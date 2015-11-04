@@ -39,7 +39,36 @@
 - name: Deploy Nagios
   hosts: nagios
   sudo: True
+  vars:
+    nagios_config_directory: "/opt/ciao_nagios/etc"
+    nagios_config_commands_directory: "/opt/ciao_nagios/etc/commands"
+    nagios_config_timeperiods_directory: "/opt/ciao_nagios/etc/timeperiods"
+    nagios_config_contacts_directory: "/opt/ciao_nagios/etc/contacts"
+  vars_files:
+    - ciao-config.yml 
   tasks:
+    - name: Create Nagios configuration directory
+      file: path={{ nagios_config_directory }} state=directory
+    - name: Create Nagios configuration commands sub-directory
+      file: path={{ nagios_config_commands_directory }} state=directory
+    - name: Create Nagios configuration timeperiods sub-directory
+      file: path={{ nagios_config_timeperiods_directory }} state=directory
+    - name: Create Nagios configuration contacts sub-directory
+      file: path={{ nagios_config_contacts_directory }} state=directory
+    - name: Create Nagios configuration hosts sub-directory
+      file: path={{ nagios_config_hosts_directory }} state=directory
+    - name: Create Nagios configuration services sub-directory
+      file: path={{ nagios_config_services_directory }} state=directory
+    - name: Install nagios.cfg
+      copy: src=files/nagios.etc/nagios.cfg dest={{ nagios_config_directory }}/nagios.cfg
+    - name: Install templates.cfg
+      copy: src=files/nagios.etc/templates.cfg dest={{ nagios_config_directory }}/templates.cfg
+    - name: Install commands.cfg
+      copy: src=files/nagios.etc/commands.cfg dest={{ nagios_config_commands_directory }}/commands.cfg
+    - name: Install timeperiods.cfg
+      copy: src=files/nagios.etc/timeperiods.cfg dest={{ nagios_config_timeperiods_directory }}/timeperiods.cfg
+    - name: Install contacts.cfg
+      copy: src=files/nagios.etc/contacts.cfg dest={{ nagios_config_contacts_directory }}/contacts.cfg
     - name: Install Nagios
       docker:
         name: ciao-nagios
@@ -48,6 +77,30 @@
         restart_policy: always
         ports:
         - "8081:80"
+#        volumes:
+#        - "{{ nagios_config_directory }}:/opt/nagios/etc"
+
+- name: Deploy Nagios host and service configurations for monitoring
+  hosts: all
+  sudo: True
+  vars_files:
+    - ciao-config.yml
+  tasks:
+    - name: Install host configurations for all hosts in the CIAO cloud
+      template: src=templates/host.cfg.j2 dest={{ nagios_config_hosts_directory }}/{{ inventory_hostname }}.cfg
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
+    - name: Install service configurations for all hosts in the CIAO cloud
+      template: src=templates/service.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}.cfg
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
+    - name: Restart Nagios
+      docker:
+        name: ciao-nagios
+        image: cpuguy83/nagios
+        state: restarted
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
 
 - name: Deploy Logspout
   hosts: logspout

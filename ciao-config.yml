@@ -1,5 +1,7 @@
 ---
 # Ciao config variables
+nagios_config_hosts_directory: "/opt/ciao_nagios/etc/hosts"
+nagios_config_services_directory: "/opt/ciao_nagios/etc/services"
 etcd_root: "http://localhost:4001/v2/keys/"
 activemq_username: "ciao"
 activemq_password: "ciao"
