@@ -2,35 +2,148 @@
 # Ciao pack for transfer of care document routing
 # Assumes ciao-base.yml is run first
 
-- name: Some tests
-  hosts: localhost
+- name: Deploy Spine TKW
+  hosts: tkw-spine
   sudo: True
   tasks:
-  vars:
-    ciao_docs_parser_root: "test/"
-  vars_files:
-    - ciao-config.yml
-  tasks:
-    - name: Get etcd_root
-      debug: msg="{{ etcd_root }}"
-    - name: Get etcd_activemq_transport
-      debug: msg="{{ lookup('etcd', '{{ etcd_activemq_transport }}') }}     
-    - name: Set configuration item X
-      uri: url={{ etcd_root }}{{ ciao_docs_parser_root }}X method=PUT body="xx"
-    - name: Get configuration item x
-      debug: msg="{{ lookup('etcd', '{{ etcd_root }}{{ ciao_docs_parser_root }}X') }}" 
+    - name: Install TKW Spine
+      docker:
+        name: ciao-tkw-spine
+        image: hscic/tkw_spine
+        state: restarted
+        restart_policy: always
+#        ports:
+#        - "4001:4001"
 
+- name: Deploy ciao-docs-finalizer
+  hosts: ciao-docs-finalizer
+  sudo: True
+#  vars:
+#    ciao_docs_parser_root: "test/"
+#  vars_files:
+#    - ciao-config.yml
+  tasks:     
+#    - name: Set configuration item X
+#      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
+    - name: Install ciao-docs-finalizer
+      docker:
+        name: ciao-docs-finalizer
+        image: hscic/ciao-docs-finalizer
+        state: restarted
+        restart_policy: always
+#        ports:
+#        - "8778:8778"
 
-      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
-
-
-
-#- name: Deploy ciao-docs-parser
-#  hosts: ciao-docs-parser
+#- name: Deploy ciao-transport-dts
+#  hosts: ciao-transport-dts
 #  sudo: True
 #  vars:
-#    ciao_docs_parser_root: "ciao-docs-parser/v1/mike/"
-#  tasks:
+#    ciao_docs_parser_root: "test/"
+#  vars_files:
+#    - ciao-config.yml
+#  tasks:     
 #    - name: Set configuration item X
-#      uri: url={{ etcd_root }}{{ ciao_docs_parser_root }}X method=PUT body="xx"
+#      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
+#    - name: Install ciao-transport-dts
+#      docker:
+#        name: ciao-transport-dts
+#        image: hscic/ciao-transport-dts
+#        state: restarted
+#        restart_policy: always
+#        ports:
+#        - "8778:8778"
 
+- name: Deploy ciao-transport-spine
+  hosts: ciao-transport-spine
+  sudo: True
+#  vars:
+#    ciao_docs_parser_root: "test/"
+#  vars_files:
+#    - ciao-config.yml
+  tasks:     
+#    - name: Set configuration item X
+#      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
+    - name: Install ciao-transport-spine
+      docker:
+        name: ciao-transport-spine
+        image: hscic/ciao-transport-spine
+        state: restarted
+        restart_policy: always
+#        ports:
+#        - "8122:8122"
+#        - "8778:8778"
+#        volumes:
+#        - "{{ logstash_config_directory }}:/opt/keystores"
+
+- name: Deploy ciao-cda-builder
+  hosts: ciao-cda-builder
+  sudo: True
+#  vars:
+#    ciao_docs_parser_root: "test/"
+#  vars_files:
+#    - ciao-config.yml
+  tasks:     
+#    - name: Set configuration item X
+#      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
+    - name: Install ciao-cda-builder
+      docker:
+        name: ciao-cda-builder
+        image: hscic/ciao-cda-builder
+        state: restarted
+        restart_policy: always
+#        ports:
+#        - "8778:8778"
+
+- name: Deploy ciao-docs-enricher
+  hosts: ciao-docs-enricher
+  sudo: True
+  vars:
+    cip_name: "ciao-docs-enricher"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+  vars_files:
+    - ciao-config.yml
+  tasks:     
+    - name: Set configuration item camel.log.mdc
+      shell: curl {{ etcd_path }}camel.log.mdc -XPUT -d value="true"
+      run_once: true
+    - name: Set configuration item camel.log.trace
+      shell: curl {{ etcd_path }}camel.log.trace -XPUT -d value="false"
+      run_once: true
+    - name: Set configuration item camel.log.debugStreams
+      shell: curl {{ etcd_path }}camel.log.debugStreams -XPUT -d value="false"
+      run_once: true
+    - name: Install ciao-docs-enricher
+      docker:
+        name: ciao-docs-enricher
+        image: hscic/ciao-docs-enricher
+        state: restarted
+        restart_policy: always
+#        ports:
+#        - "8778:8778"
+#        volumes:
+#        - "{{ logstash_config_directory }}:/opt/ciao-docs-enricher/json"
+
+- name: Deploy ciao-docs-parser
+  hosts: ciao-docs-parser
+  sudo: True
+#  vars:
+#    ciao_docs_parser_root: "test/"
+#  vars_files:
+#    - ciao-config.yml
+  tasks:     
+#    - name: Set configuration item X
+#      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
+    - name: Install ciao-docs-parser
+      docker:
+        name: ciao-docs-parser
+        image: hscic/ciao-docs-parser
+        state: restarted
+        restart_policy: always
+#        ports:
+#        - "8778:8778"
+#        volumes:
+#        - "{{ logstash_config_directory }}:/opt/ciao-docs-parser/input"
+#        - "{{ logstash_config_directory }}:/opt/ciao-docs-parser/completed"
+#        - "{{ logstash_config_directory }}:/opt/ciao-docs-parser/error"
+#        - "{{ logstash_config_directory }}:/opt/ciao-docs-parser/in-progress"
