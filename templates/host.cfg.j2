@@ -1,5 +1,4 @@
-define host
-  {
+define host{
     host_name                       {{ inventory_hostname }}
     address                         {{ ansible_default_ipv4.address }}
     check_command                   check-host-alive
