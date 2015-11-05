@@ -65,6 +65,8 @@
       copy: src=files/nagios.etc/resource.cfg dest={{ nagios_config_directory }}/resource.cfg
     - name: Install templates.cfg
       copy: src=files/nagios.etc/templates.cfg dest={{ nagios_config_directory }}/templates.cfg
+    - name: Install cgi.cfg
+      copy: src=files/nagios.etc/cgi.cfg dest={{ nagios_config_directory }}/cgi.cfg
     - name: Install commands.cfg
       copy: src=files/nagios.etc/commands.cfg dest={{ nagios_config_commands_directory }}/commands.cfg
     - name: Install timeperiods.cfg
@@ -79,8 +81,8 @@
         restart_policy: always
         ports:
         - "8081:80"
-#        volumes:
-#        - "{{ nagios_config_directory }}:/opt/nagios/etc"
+        volumes:
+        - "{{ nagios_config_directory }}:/opt/nagios/etc"
 
 - name: Deploy Nagios host and service configurations for monitoring
   hosts: all
