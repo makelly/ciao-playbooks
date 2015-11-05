@@ -1,5 +1,5 @@
 ---
-# Ciao pack for transfer of care document routing
+# Ciao app for send discharge summary via spine
 # Assumes ciao-base.yml is run first
 
 - name: Deploy Spine TKW
@@ -12,8 +12,8 @@
         image: hscic/tkw_spine
         state: restarted
         restart_policy: always
-#        ports:
-#        - "4001:4001"
+        ports:
+        - "4002:4001"
 
 - name: Deploy ciao-docs-finalizer
   hosts: ciao-docs-finalizer

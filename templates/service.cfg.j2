@@ -12,3 +12,30 @@ define service{
     contact_groups                 admins
   }
 
+define service{
+    host_name                      {{ inventory_hostname }}
+    service_description            LOCAL LOAD
+    check_command                  check_local_load
+    check_interval                 10
+    check_period                   24x7
+    retry_interval                 3
+    max_check_attempts             3
+    notification_interval          30
+    notification_period            24x7
+    notification_options           w,c,u,r
+    contact_groups                 admins
+  }
+
+define service{
+    host_name                      {{ inventory_hostname }}
+    service_description            LOCAL SWAP
+    check_command                  check_local_swap
+    check_interval                 10
+    check_period                   24x7
+    retry_interval                 3
+    max_check_attempts             3
+    notification_interval          30
+    notification_period            24x7
+    notification_options           w,c,u,r
+    contact_groups                 admins
+  }
