@@ -26,12 +26,13 @@
     - name: Install ELK stack
       docker:
         name: ciao-elk
-        image: willdurand/elk
+        image: hscic/ciao-elk
         state: restarted
         restart_policy: always
         ports:
         - "8080:80"
         - "514:514"
+        - "9200:9200"
         volumes:
         - "{{ logstash_config_directory }}:/etc/logstash"
         - "{{ elastic_data_directory }}:/data"

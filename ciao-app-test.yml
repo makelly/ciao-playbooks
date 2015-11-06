@@ -127,23 +127,130 @@
 - name: Deploy ciao-docs-parser
   hosts: ciao-docs-parser
   sudo: True
-#  vars:
-#    ciao_docs_parser_root: "test/"
-#  vars_files:
-#    - ciao-config.yml
-  tasks:     
-#    - name: Set configuration item X
-#      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
+  vars:
+    cip_name: "ciao-docs-parser"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+    hazelcast_port: "5701"
+    route_dn: "discharge-notification"
+    route_ed: "ed-discharge"
+    route_auto: "auto-detect"
+  vars_files:
+    - ciao-config.yml
+  tasks:
+# Fudge until NFS setup
+    - name: Create input directory
+      file: path=/opt/ciao/input state=directory
+# Fudge until NFS setup
+    - name: Create error directory
+      file: path=/opt/ciao/error state=directory
+# Fudge until NFS setup
+    - name: Create in-progress directory
+      file: path=/opt/ciao/in-progress state=directory
+
+    - name: Set configuration item camel.log.mdc
+      shell: curl {{ etcd_path }}camel.log.mdc -XPUT -d value="true"
+      run_once: true
+    - name: Set configuration item camel.log.trace
+      shell: curl {{ etcd_path }}camel.log.trace -XPUT -d value="false"
+      run_once: true
+    - name: Set configuration item camel.log.debugStreams
+      shell: curl {{ etcd_path }}camel.log.debugStreams -XPUT -d value="false"
+      run_once: true     
+    - name: Set configuration item processorConfig
+      shell: curl {{ etcd_path }}processorConfig -XPUT -d value="default"
+      run_once: true
+    - name: Set configuration item repositoryConfig
+      shell: curl {{ etcd_path }}repositoryConfig -XPUT -d value="hazelcast"
+      run_once: true
+    - name: Set configuration item messagingConfig
+      shell: curl {{ etcd_path }}messagingConfig -XPUT -d value="activemq"
+      run_once: true
+    - name: Set configuration item activemq.brokerURL
+      shell: curl {{ etcd_path }}activemq.brokerURL -XPUT -d value="{{ activemq_transport }}"
+      run_once: true
+    - name: Set configuration item activemq.userName
+      shell: curl {{ etcd_path }}activemq.userName -XPUT -d value="{{ activemq_username }}"
+      run_once: true  
+    - name: Set configuration item activemq.password
+      shell: curl {{ etcd_path }}activemq.password -XPUT -d value="{{ activemq_password }}"
+      run_once: true  
+    - name: Set configuration item hazelcast.group.name
+      shell: curl {{ etcd_path }}hazelcast.group.name -XPUT -d value="ciao-docs-parser"
+      run_once: true  
+    - name: Set configuration item hazelcast.group.password
+      shell: curl {{ etcd_path }}hazelcast.group.password -XPUT -d value="mozart"
+      run_once: true  
+    - name: Set configuration item hazelcast.network.port
+      shell: curl {{ etcd_path }}hazelcast.network.port -XPUT -d value="{{ hazelcast_port }}"
+      run_once: true  
+    - name: Set configuration item hazelcast.network.join.tcp_ip.members
+      shell: curl {{ etcd_path }}hazelcast.network.join.tcp_ip.members -XPUT -d value="{% for host in groups.ciao-docs-parser %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+      run_once: true  
+    - name: Set configuration item hazelcast.network.join.multicast.enabled
+      shell: curl {{ etcd_path }}hazelcast.network.join.multicast.enabled -XPUT -d value="false"
+      run_once: true  
+    - name: Set configuration item documentParserRoutes
+      shell: curl {{ etcd_path }}documentParserRoutes -XPUT -d value="{{ route_dn }},{{ route_ed }},{{ route_auto}}"
+      run_once: true  
+    - name: Set configuration item documentParserRoutes.outputQueue
+      shell: curl {{ etcd_path }}documentParserRoutes.outputQueue -XPUT -d value="parsed-documents"
+      run_once: true  
+    - name: Set configuration item documentParserRoutes.inProgressFolder
+      shell: curl {{ etcd_path }}documentParserRoutes.inProgressFolder -XPUT -d value="/opt/ciao-docs-parser/in-progress"
+      run_once: true  
+    - name: Set configuration item documentParserRoutes.idempotentRespositoryId
+      shell: curl {{ etcd_path }}documentParserRoutes.idempotentRespositoryId -XPUT -d value="idempotentRespository"
+      run_once: true  
+    - name: Set configuration item documentParserRoutes.inProgressRepositoryId
+      shell: curl {{ etcd_path }}documentParserRoutes.inProgressRepositoryId -XPUT -d value="inProgressRepository"
+      run_once: true  
+    - name: Set configuration item documentParserRoutes.{{ route_dn }}.inputFolder
+      shell: curl {{ etcd_path }}documentParserRoutes.{{ route_dn }}.inputFolder -XPUT -d value="/opt/ciao-docs-parser/input/{{ route_dn }}"
+      run_once: true
+    - name: Set configuration item documentParserRoutes.{{ route_dn }}.completedFolder
+      shell: curl {{ etcd_path }}documentParserRoutes.{{ route_dn }}.completedFolder -XPUT -d value="{{ completed_folder_root }}/{{ route_dn }}"
+      run_once: true
+    - name: Set configuration item documentParserRoutes.{{ route_dn }}.errorFolder
+      shell: curl {{ etcd_path }}documentParserRoutes.{{ route_dn }}.errorFolder -XPUT -d value="/opt/ciao-docs-parser/error/{{ route_dn }}"
+      run_once: true
+    - name: Set configuration item documentParserRoutes.{{ route_dn }}.processorId
+      shell: curl {{ etcd_path }}documentParserRoutes.{{ route_dn }}.processorId -XPUT -d value="dischargeNotificationProcessor"
+      run_once: true
+    - name: Set configuration item documentParserRoutes.{{ route_ed }}.inputFolder
+      shell: curl {{ etcd_path }}documentParserRoutes.{{ route_ed }}.inputFolder -XPUT -d value="/opt/ciao-docs-parser/input/{{ route_ed }}"
+      run_once: true
+    - name: Set configuration item documentParserRoutes.{{ route_ed }}.completedFolder
+      shell: curl {{ etcd_path }}documentParserRoutes.{{ route_ed }}.completedFolder -XPUT -d value="{{ completed_folder_root }}/{{ route_ed }}"
+      run_once: true
+    - name: Set configuration item documentParserRoutes.{{ route_ed }}.errorFolder
+      shell: curl {{ etcd_path }}documentParserRoutes.{{ route_ed }}.errorFolder -XPUT -d value="/opt/ciao-docs-parser/error/{{ route_ed }}"
+      run_once: true
+    - name: Set configuration item documentParserRoutes.{{ route_ed }}.processorId
+      shell: curl {{ etcd_path }}documentParserRoutes.{{ route_ed }}.processorId -XPUT -d value="edDischargeProcessor"
+      run_once: true
+    - name: Set configuration item documentParserRoutes.{{ route_auto }}.inputFolder
+      shell: curl {{ etcd_path }}documentParserRoutes.{{ route_auto }}.inputFolder -XPUT -d value="/opt/ciao-docs-parser/input/{{ route_auto }}"
+      run_once: true
+    - name: Set configuration item documentParserRoutes.{{ route_auto }}.completedFolder
+      shell: curl {{ etcd_path }}documentParserRoutes.{{ route_auto }}.completedFolder -XPUT -d value="{{ completed_folder_root }}/{{ route_auto }}"
+      run_once: true
+    - name: Set configuration item documentParserRoutes.{{ route_auto }}.errorFolder
+      shell: curl {{ etcd_path }}documentParserRoutes.{{ route_auto }}.errorFolder -XPUT -d value="/opt/ciao-docs-parser/error/{{ route_auto }}"
+      run_once: true
+    - name: Set configuration item documentParserRoutes.{{ route_auto }}.processorId
+      shell: curl {{ etcd_path }}documentParserRoutes.{{ route_auto }}.processorId -XPUT -d value="autoDetectProcessor"
+      run_once: true
     - name: Install ciao-docs-parser
       docker:
         name: ciao-docs-parser
         image: hscic/ciao-docs-parser
         state: restarted
         restart_policy: always
-#        ports:
+        ports:
+        - "5701:5701"
 #        - "8778:8778"
-#        volumes:
-#        - "{{ logstash_config_directory }}:/opt/ciao-docs-parser/input"
-#        - "{{ logstash_config_directory }}:/opt/ciao-docs-parser/completed"
-#        - "{{ logstash_config_directory }}:/opt/ciao-docs-parser/error"
-#        - "{{ logstash_config_directory }}:/opt/ciao-docs-parser/in-progress"
+        volumes:
+        - "/opt/ciao/input:/opt/ciao-docs-parser/input"
+        - "/opt/ciao/error:/opt/ciao-docs-parser/error"
+        - "/opt/ciao/in-progress:/opt/ciao-docs-parser/in-progress"
