@@ -30,35 +30,35 @@ harpo
 groucho
 zeppo
 
-[ciao-docs-parser]
+[ciaodocsparser]
 harpo
 groucho
 zeppo
 
-[ciao-docs-enricher]
+[ciaodocsenricher]
 harpo
 groucho
 zeppo
 
-[ciao-cda-builder]
+[ciaocdabuilder]
 harpo
 groucho
 zeppo
 
-[ciao-transport-spine]
+[ciaotransportspine]
 harpo
 groucho
 zeppo
 
-[ciao-transport-dts]
+[ciaotransportdts]
 harpo
 groucho
 zeppo
 
-[ciao-docs-finalizer]
+[ciaodocsfinalizer]
 harpo
 groucho
 zeppo
 
-[tkw-spine]
+[tkwspine]
 chico

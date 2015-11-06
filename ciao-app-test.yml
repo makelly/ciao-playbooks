@@ -3,7 +3,7 @@
 # Assumes ciao-base.yml is run first
 
 - name: Deploy Spine TKW
-  hosts: tkw-spine
+  hosts: tkwspine
   sudo: True
   tasks:
     - name: Install TKW Spine
@@ -16,7 +16,7 @@
         - "4002:4001"
 
 - name: Deploy ciao-docs-finalizer
-  hosts: ciao-docs-finalizer
+  hosts: ciaodocsfinalizer
   sudo: True
 #  vars:
 #    ciao_docs_parser_root: "test/"
@@ -35,7 +35,7 @@
 #        - "8778:8778"
 
 #- name: Deploy ciao-transport-dts
-#  hosts: ciao-transport-dts
+#  hosts: ciaotransportdts
 #  sudo: True
 #  vars:
 #    ciao_docs_parser_root: "test/"
@@ -54,7 +54,7 @@
 #        - "8778:8778"
 
 - name: Deploy ciao-transport-spine
-  hosts: ciao-transport-spine
+  hosts: ciaotransportspine
   sudo: True
 #  vars:
 #    ciao_docs_parser_root: "test/"
@@ -76,7 +76,7 @@
 #        - "{{ logstash_config_directory }}:/opt/keystores"
 
 - name: Deploy ciao-cda-builder
-  hosts: ciao-cda-builder
+  hosts: ciaocdabuilder
   sudo: True
 #  vars:
 #    ciao_docs_parser_root: "test/"
@@ -95,7 +95,7 @@
 #        - "8778:8778"
 
 - name: Deploy ciao-docs-enricher
-  hosts: ciao-docs-enricher
+  hosts: ciaodocsenricher
   sudo: True
   vars:
     cip_name: "ciao-docs-enricher"
@@ -125,7 +125,7 @@
 #        - "{{ logstash_config_directory }}:/opt/ciao-docs-enricher/json"
 
 - name: Deploy ciao-docs-parser
-  hosts: ciao-docs-parser
+  hosts: ciaodocsparser
   sudo: True
   vars:
     cip_name: "ciao-docs-parser"
@@ -185,7 +185,7 @@
       shell: curl {{ etcd_path }}hazelcast.network.port -XPUT -d value="{{ hazelcast_port }}"
       run_once: true  
     - name: Set configuration item hazelcast.network.join.tcp_ip.members
-      shell: curl {{ etcd_path }}hazelcast.network.join.tcp_ip.members -XPUT -d value="{% for host in groups.ciao-docs-parser %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+      shell: curl {{ etcd_path }}hazelcast.network.join.tcp_ip.members -XPUT -d value="{% for host in groups.ciaodocsparser %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}"
       run_once: true  
     - name: Set configuration item hazelcast.network.join.multicast.enabled
       shell: curl {{ etcd_path }}hazelcast.network.join.multicast.enabled -XPUT -d value="false"
