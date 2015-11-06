@@ -78,13 +78,55 @@
 - name: Deploy ciao-cda-builder
   hosts: ciaocdabuilder
   sudo: True
-#  vars:
-#    ciao_docs_parser_root: "test/"
-#  vars_files:
-#    - ciao-config.yml
+  vars:
+    cip_name: "ciao-cda-builder"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+  vars_files:
+    - ciao-config.yml
   tasks:     
-#    - name: Set configuration item X
-#      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
+# Fudge until NFS setup
+    - name: Create in-progress directory
+      file: path=/opt/ciao/in-progress state=directory
+    - name: Set configuration item camel.log.mdc
+      shell: curl {{ etcd_path }}camel.log.mdc -XPUT -d value="true"
+      run_once: true
+    - name: Set configuration item camel.log.trace
+      shell: curl {{ etcd_path }}camel.log.trace -XPUT -d value="false"
+      run_once: true
+    - name: Set configuration item camel.log.debugStreams
+      shell: curl {{ etcd_path }}camel.log.debugStreams -XPUT -d value="false"
+      run_once: true     
+    - name: Set configuration item processorConfig
+      shell: curl {{ etcd_path }}processorConfig -XPUT -d value="default"
+      run_once: true
+    - name: Set configuration item messagingConfig
+      shell: curl {{ etcd_path }}messagingConfig -XPUT -d value="activemq"
+      run_once: true
+    - name: Set configuration item activemq.brokerURL
+      shell: curl {{ etcd_path }}activemq.brokerURL -XPUT -d value="{{ activemq_transport }}"
+      run_once: true
+    - name: Set configuration item activemq.userName
+      shell: curl {{ etcd_path }}activemq.userName -XPUT -d value="{{ activemq_username }}"
+      run_once: true  
+    - name: Set configuration item activemq.password
+      shell: curl {{ etcd_path }}activemq.password -XPUT -d value="{{ activemq_password }}"
+      run_once: true  
+    - name: Set configuration item cdaBuilderRoutes
+      shell: curl {{ etcd_path }}cdaBuilderRoutes -XPUT -d value="default"
+      run_once: true  
+    - name: Set configuration item cdaBuilderRoutes.outputQueue
+      shell: curl {{ etcd_path }}cdaBuilderRoutes.outputQueue -XPUT -d value="{{ builder_out_q }}"
+      run_once: true  
+    - name: Set configuration item cdaBuilderRoutes.processorId
+      shell: curl {{ etcd_path }}cdaBuilderRoutes.processorId -XPUT -d value="processor"
+      run_once: true  
+    - name: Set configuration item cdaBuilderRoutes.default.inputQueue
+      shell: curl {{ etcd_path }}cdaBuilderRoutes.default.inputQueue -XPUT -d value="{{ enricher_out_q }}"
+      run_once: true 
+    - name: Set configuration item inputProgressFolder
+      shell: curl {{ etcd_path }}inputProgressFolder -XPUT -d value="/opt/ciao-cda-builder/in-progress"
+      run_once: true
     - name: Install ciao-cda-builder
       docker:
         name: ciao-cda-builder
@@ -93,6 +135,10 @@
         restart_policy: always
 #        ports:
 #        - "8778:8778"
+        env:
+          CIAO_ETCD_URL: http://localhost:4001
+        volumes:
+        - "/opt/ciao/in-progress:/opt/ciao-cda-builder/in-progress"
 
 - name: Deploy ciao-docs-enricher
   hosts: ciaodocsenricher
@@ -109,7 +155,7 @@
     - name: Create in-progress directory
       file: path=/opt/ciao/in-progress state=directory
 # Fudge until NFS setup
-    - name: Create in-progress directory
+    - name: Create json directory
       file: path={{ json_directory }} state=directory
     - name: Install enrich.json
       copy: src=files/enrich.json dest={{ json_directory }}/enrich.json

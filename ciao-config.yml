@@ -10,3 +10,4 @@ activemq_transport: "failover:({% for host in groups.activemq %}tcp://{{ hostvar
 completed_folder_root: "/opt/ciao-docs-finalizer/completed"
 parser_out_q: "parsed-documents"
 enricher_out_q: "enriched-documents"
+builder_out_q: "cda-documents"
