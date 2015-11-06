@@ -194,7 +194,7 @@
       shell: curl {{ etcd_path }}documentParserRoutes -XPUT -d value="{{ route_dn }},{{ route_ed }},{{ route_auto}}"
       run_once: true  
     - name: Set configuration item documentParserRoutes.outputQueue
-      shell: curl {{ etcd_path }}documentParserRoutes.outputQueue -XPUT -d value="parsed-documents"
+      shell: curl {{ etcd_path }}documentParserRoutes.outputQueue -XPUT -d value="{{ parser_out_q }}"
       run_once: true  
     - name: Set configuration item documentParserRoutes.inProgressFolder
       shell: curl {{ etcd_path }}documentParserRoutes.inProgressFolder -XPUT -d value="/opt/ciao-docs-parser/in-progress"
@@ -250,6 +250,8 @@
         ports:
         - "5701:5701"
 #        - "8778:8778"
+        env:
+          CIAO_ETCD_URL: http://localhost:4001
         volumes:
         - "/opt/ciao/input:/opt/ciao-docs-parser/input"
         - "/opt/ciao/error:/opt/ciao-docs-parser/error"
