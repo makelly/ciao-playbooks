@@ -18,21 +18,90 @@
 - name: Deploy ciao-docs-finalizer
   hosts: ciaodocsfinalizer
   sudo: True
-#  vars:
-#    ciao_docs_parser_root: "test/"
-#  vars_files:
-#    - ciao-config.yml
+  vars:
+    cip_name: "ciao-docs-finalizer"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+    hazelcast_port: "5702"
+  vars_files:
+    - ciao-config.yml
   tasks:     
-#    - name: Set configuration item X
-#      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
+# Fudge until NFS setup
+    - name: Create error directory
+      file: path=/opt/ciao/error state=directory
+# Fudge until NFS setup
+    - name: Create in-progress directory
+      file: path=/opt/ciao/in-progress state=directory
+
+    - name: Set configuration item camel.log.mdc
+      shell: curl {{ etcd_path }}camel.log.mdc -XPUT -d value="true"
+      run_once: true
+    - name: Set configuration item camel.log.trace
+      shell: curl {{ etcd_path }}camel.log.trace -XPUT -d value="false"
+      run_once: true
+    - name: Set configuration item camel.log.debugStreams
+      shell: curl {{ etcd_path }}camel.log.debugStreams -XPUT -d value="false"
+      run_once: true     
+    - name: Set configuration item processorConfig
+      shell: curl {{ etcd_path }}processorConfig -XPUT -d value="default"
+      run_once: true
+    - name: Set configuration item repositoryConfig
+      shell: curl {{ etcd_path }}repositoryConfig -XPUT -d value="hazelcast"
+      run_once: true
+    - name: Set configuration item hazelcast.group.name
+      shell: curl {{ etcd_path }}hazelcast.group.name -XPUT -d value="ciao-docs-finalizer"
+      run_once: true  
+    - name: Set configuration item hazelcast.group.password
+      shell: curl {{ etcd_path }}hazelcast.group.password -XPUT -d value="liszt"
+      run_once: true  
+    - name: Set configuration item hazelcast.network.port
+      shell: curl {{ etcd_path }}hazelcast.network.port -XPUT -d value="{{ hazelcast_port }}"
+      run_once: true  
+    - name: Set configuration item hazelcast.network.join.tcp_ip.members
+      shell: curl {{ etcd_path }}hazelcast.network.join.tcp_ip.members -XPUT -d value="{% for host in groups.ciaodocsfinalizer %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}"
+      run_once: true  
+    - name: Set configuration item hazelcast.network.join.multicast.enabled
+      shell: curl {{ etcd_path }}hazelcast.network.join.multicast.enabled -XPUT -d value="false"
+      run_once: true  
+    - name: Set configuration item inProgressFolderPollPeriod
+      shell: curl {{ etcd_path }}inProgressFolderPollPeriod -XPUT -d value="500"
+      run_once: true  
+    - name: Set configuration item inProgressFolder
+      shell: curl {{ etcd_path }}inProgressFolder -XPUT -d value="/opt/ciao-docs-finalizer/in-progress"
+      run_once: true  
+    - name: Set configuration item documentPreparationTimeout
+      shell: curl {{ etcd_path }}documentPreparationTimeout -XPUT -d value="60000"
+      run_once: true  
+    - name: Set configuration item documentSendTimeout
+      shell: curl {{ etcd_path }}documentSendTimeout -XPUT -d value="18000"
+      run_once: true  
+    - name: Set configuration item infResponseTimeout
+      shell: curl {{ etcd_path }}infResponseTimeout -XPUT -d value="300000"
+      run_once: true
+    - name: Set configuration item busResponseTimeout
+      shell: curl {{ etcd_path }}busResponseTimeout -XPUT -d value="17280000"
+      run_once: true
+    - name: Set configuration item idempotentActions
+      shell: curl {{ etcd_path }}idempotentActions -XPUT -d value="true"
+      run_once: true
+    - name: Set configuration item actions
+      shell: curl {{ etcd_path }}actions -XPUT -d value="to=SUCCEEDED > MoveToCompletedFolder\nto=FAILED > MoveToErrorFolder"
+      run_once: true
     - name: Install ciao-docs-finalizer
       docker:
         name: ciao-docs-finalizer
         image: hscic/ciao-docs-finalizer
         state: restarted
         restart_policy: always
-#        ports:
+        ports:
+        - "5702:5702"
 #        - "8778:8778"
+        env:
+          CIAO_ETCD_URL: http://localhost:4001
+        volumes:
+        - "/opt/ciao/completed:/opt/ciao-docs-parser/completed"
+        - "/opt/ciao/error:/opt/ciao-docs-parser/error"
+        - "/opt/ciao/in-progress:/opt/ciao-docs-finalizer/in-progress"
 
 #- name: Deploy ciao-transport-dts
 #  hosts: ciaotransportdts
