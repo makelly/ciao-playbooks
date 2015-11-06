@@ -101,9 +101,18 @@
     cip_name: "ciao-docs-enricher"
     cip_version: "1.0.0-SNAPSHOT"
     etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+    json_directory: "/opt/ciao/json"
   vars_files:
     - ciao-config.yml
   tasks:     
+# Fudge until NFS setup
+    - name: Create in-progress directory
+      file: path=/opt/ciao/in-progress state=directory
+# Fudge until NFS setup
+    - name: Create in-progress directory
+      file: path={{ json_directory }} state=directory
+    - name: Install enrich.json
+      copy: src=files/enrich.json dest={{ json_directory }}/enrich.json
     - name: Set configuration item camel.log.mdc
       shell: curl {{ etcd_path }}camel.log.mdc -XPUT -d value="true"
       run_once: true
@@ -112,6 +121,39 @@
       run_once: true
     - name: Set configuration item camel.log.debugStreams
       shell: curl {{ etcd_path }}camel.log.debugStreams -XPUT -d value="false"
+      run_once: true     
+    - name: Set configuration item processorConfig
+      shell: curl {{ etcd_path }}processorConfig -XPUT -d value="default"
+      run_once: true
+    - name: Set configuration item messagingConfig
+      shell: curl {{ etcd_path }}messagingConfig -XPUT -d value="activemq"
+      run_once: true
+    - name: Set configuration item activemq.brokerURL
+      shell: curl {{ etcd_path }}activemq.brokerURL -XPUT -d value="{{ activemq_transport }}"
+      run_once: true
+    - name: Set configuration item activemq.userName
+      shell: curl {{ etcd_path }}activemq.userName -XPUT -d value="{{ activemq_username }}"
+      run_once: true  
+    - name: Set configuration item activemq.password
+      shell: curl {{ etcd_path }}activemq.password -XPUT -d value="{{ activemq_password }}"
+      run_once: true  
+    - name: Set configuration item documentEnricherRoutes
+      shell: curl {{ etcd_path }}documentEnricherRoutes -XPUT -d value="default"
+      run_once: true  
+    - name: Set configuration item documentEnricherRoutes.outputQueue
+      shell: curl {{ etcd_path }}documentEnricherRoutes.outputQueue -XPUT -d value="{{ enricher_out_q }}"
+      run_once: true  
+    - name: Set configuration item documentEnricherRoutes.default.enricherId
+      shell: curl {{ etcd_path }}documentEnricherRoutes.default.enricherId -XPUT -d value="staticJson"
+      run_once: true  
+    - name: Set configuration item documentEnricherRoutes.default.inputQueue
+      shell: curl {{ etcd_path }}documentEnricherRoutes.default.inputQueue -XPUT -d value="{{ parser_out_q }}"
+      run_once: true  
+    - name: Set configuration item staticJson.resourcePaths
+      shell: curl {{ etcd_path }}staticJson.resourcePaths -XPUT -d value="/opt/ciao-docs-enricher/json/enrich.json"
+      run_once: true  
+    - name: Set configuration item inputProgressFolder
+      shell: curl {{ etcd_path }}inputProgressFolder -XPUT -d value="/opt/ciao-docs-enricher/in-progress"
       run_once: true
     - name: Install ciao-docs-enricher
       docker:
@@ -121,8 +163,11 @@
         restart_policy: always
 #        ports:
 #        - "8778:8778"
-#        volumes:
-#        - "{{ logstash_config_directory }}:/opt/ciao-docs-enricher/json"
+        env:
+          CIAO_ETCD_URL: http://localhost:4001
+        volumes:
+        - "/opt/ciao/json:/opt/ciao-docs-enricher/json"
+        - "/opt/ciao/in-progress:/opt/ciao-docs-enricher/in-progress"
 
 - name: Deploy ciao-docs-parser
   hosts: ciaodocsparser
