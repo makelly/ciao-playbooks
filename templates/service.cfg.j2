@@ -15,7 +15,7 @@ define service{
 define service{
     host_name                      {{ inventory_hostname }}
     service_description            LOCAL LOAD
-    check_command                  check_local_load -w 0.7 -c 0.9
+    check_command                  check_local_load!5.0,4.0,3.0!10.0,6.0,4.0
     check_interval                 10
     check_period                   24x7
     retry_interval                 3
@@ -28,8 +28,8 @@ define service{
 
 define service{
     host_name                      {{ inventory_hostname }}
-    service_description            LOCAL SWAP
-    check_command                  check_local_swap -w 40% -c 10%
+    service_description            LOCAL SWAP SPACE
+    check_command                  check_local_swap!20!10
     check_interval                 10
     check_period                   24x7
     retry_interval                 3
