@@ -1,5 +1,0 @@
----
-# Ciao cloud deployment
-
-- include: ciao-base.yml
-- include: ciao-app-test.yml

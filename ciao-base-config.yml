@@ -1,0 +1,10 @@
+---
+# CIAO base config variables
+#
+nagios_config_hosts_directory: "/opt/ciao_nagios/etc/hosts"
+nagios_config_services_directory: "/opt/ciao_nagios/etc/services"
+etcd_url: "http://localhost:4001"
+etcd_root: "{{ etcd_url }}/v2/keys/ciao/"
+activemq_username: "ciao"
+activemq_password: "ciao"
+activemq_transport: "failover:({% for host in groups.activemq %}tcp://{{ hostvars[host].ansible_default_ipv4.address }}:61616{% if not loop.last %},{% endif %}{% endfor %})"

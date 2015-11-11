@@ -1,5 +1,6 @@
 ---
-# Configure ciao base services
+# CIAO base services
+#
 
 - name: Deploy ansible docker issues workaround
   hosts: all
@@ -46,7 +47,7 @@
     nagios_config_timeperiods_directory: "/opt/ciao_nagios/etc/timeperiods"
     nagios_config_contacts_directory: "/opt/ciao_nagios/etc/contacts"
   vars_files:
-    - ciao-config.yml 
+    - ciao-base-config.yml 
   tasks:
     - name: Create Nagios configuration directory
       file: path={{ nagios_config_directory }} state=directory
@@ -90,7 +91,7 @@
   serial: 1
   sudo: True
   vars_files:
-    - ciao-config.yml
+    - ciao-base-config.yml
   tasks:
     - name: Install host configurations for all hosts in the CIAO cloud
       template: src=templates/host.cfg.j2 dest={{ nagios_config_hosts_directory }}/{{ inventory_hostname }}.cfg
@@ -188,44 +189,31 @@
     activemq_broker_name: "CiaoBroker"
     activemq_config_directory: "/opt/ciao_activemq/conf"
   vars_files:
-    - ciao-config.yml
+    - ciao-base-config.yml
   tasks:
     - name: Create ActiveMQ configuration directory
       file: path={{ activemq_config_directory }} state=directory
     - name: Install broker configuration file
       template: src=templates/activemq.xml.j2 dest={{ activemq_config_directory }}/activemq.xml
-    - name: Install log4j.properties
-      copy: src=files/activemq.conf/log4j.properties dest={{ activemq_config_directory }}/log4j.properties
-    - name: Install broker.ks
-      copy: src=files/activemq.conf/broker.ks dest={{ activemq_config_directory }}/broker.ks
-    - name: Install broker.ts
-      copy: src=files/activemq.conf/broker.ts dest={{ activemq_config_directory }}/broker.ts
-    - name: Install broker-localhost.cert
-      copy: src=files/activemq.conf/broker-localhost.cert dest={{ activemq_config_directory }}/broker-localhost.cert
-    - name: Install client.ks
-      copy: src=files/activemq.conf/client.ks dest={{ activemq_config_directory }}/client.ks
-    - name: Install client.ts
-      copy: src=files/activemq.conf/client.ts dest={{ activemq_config_directory }}/client.ts
-    - name: Install credentials.properties
-      copy: src=files/activemq.conf/credentials.properties dest={{ activemq_config_directory }}/credentials.properties
-    - name: Install credentials-enc.properties
-      copy: src=files/activemq.conf/credentials-enc.properties dest={{ activemq_config_directory }}/credentials-enc.properties
-    - name: Install groups.properties
-      copy: src=files/activemq.conf/groups.properties dest={{ activemq_config_directory }}/groups.properties
-    - name: Install jetty.xml
-      copy: src=files/activemq.conf/jetty.xml dest={{ activemq_config_directory }}/jetty.xml
-    - name: Install jetty-realm.properties
-      copy: src=files/activemq.conf/jetty-realm.properties dest={{ activemq_config_directory }}/jetty-realm.properties
-    - name: Install jmx.access
-      copy: src=files/activemq.conf/jmx.access dest={{ activemq_config_directory }}/jmx.access
-    - name: Install jmx.password
-      copy: src=files/activemq.conf/jmx.password dest={{ activemq_config_directory }}/jmx.password
-    - name: Install logging.properties
-      copy: src=files/activemq.conf/logging.properties dest={{ activemq_config_directory }}/logging.properties
-    - name: Install login.config
-      copy: src=files/activemq.conf/login.config dest={{ activemq_config_directory }}/login.config
-    - name: Install users.properties
-      copy: src=files/activemq.conf/users.properties dest={{ activemq_config_directory }}/users.properties
+    - name: Install other configuration files
+      copy: src=files/activemq.conf/{{ item }} dest={{ activemq_config_directory }}/{{ item }}
+      with_items:
+        - log4j.properties
+        - broker.ks
+        - broker.ts
+        - broker-localhost.cert
+        - client.ks
+        - client.ts
+        - credentials.properties
+        - credentials-enc.properties
+        - groups.properties
+        - jetty.xml
+        - jetty-realm.properties
+        - jmx.access
+        - jmx.password
+        - logging.properties
+        - login.config
+        - users.properties
     - name: Install ActiveMQ
       docker:
         name: ciao-activemq

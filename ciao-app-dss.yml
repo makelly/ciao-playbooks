@@ -1,0 +1,264 @@
+---
+# Ciao app for send discharge summary via spine
+# Assumes ciao-base.yml is run first
+#
+
+- name: Deploy Spine TKW
+  hosts: tkwspine
+  sudo: True
+  tasks:
+    - name: Install TKW Spine
+      docker:
+        name: ciao-tkw-spine
+        image: hscic/tkw_spine
+        state: restarted
+        restart_policy: always
+        ports:
+        - "4002:4001"
+
+- name: Deploy ciao-docs-finalizer
+  hosts: ciaodocsfinalizer
+  sudo: True
+  vars:
+    cip_name: "ciao-docs-finalizer"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+    hazelcast_port: "5702"
+  vars_files:
+    - ciao-base-config.yml
+  tasks:
+# Fudge until NFS setup
+    - name: Create error directory
+      file: path=/opt/ciao/error state=directory
+# Fudge until NFS setup
+    - name: Create in-progress directory
+      file: path=/opt/ciao/in-progress state=directory
+    - name: Set configuration items in etcd
+      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
+      run_once: true
+      with_items:
+        - { key: 'camel.log.mdc', value: 'true' }
+        - { key: 'camel.log.trace', value: 'false' }
+        - { key: 'camel.log.debugStreams', value: 'false' }
+        - { key: 'processorConfig', value: 'default' }
+        - { key: 'repositoryConfig', value: 'hazelcast' }
+        - { key: 'hazelcast.group.name', value: 'ciao-docs-finalizer' }
+        - { key: 'hazelcast.group.password', value: 'liszt' }
+        - { key: 'hazelcast.network.port', value: '{{ hazelcast_port }}' }
+        - { key: 'hazelcast.network.join.tcp_ip.members', value: '{% for host in groups.ciaodocsfinalizer %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}' }
+        - { key: 'hazelcast.network.join.multicast.enabled', value: 'false' }
+        - { key: 'inProgressFolderPollPeriod', value: '500' }
+        - { key: 'inProgressFolder', value: '/opt/ciao-docs-finalizer/in-progress' }
+        - { key: 'documentPreparationTimeout', value: '60000' }
+        - { key: 'documentSendTimeout', value: '18000' }
+        - { key: 'infResponseTimeout', value: '300000' }
+        - { key: 'busResponseTimeout', value: '17280000' }
+        - { key: 'idempotentActions', value: 'to=SUCCEEDED > MoveToCompletedFolder\nto=FAILED > MoveToErrorFolder' }
+    - name: Install ciao-docs-finalizer
+      docker:
+        name: ciao-docs-finalizer
+        image: hscic/ciao-docs-finalizer
+        state: restarted
+        restart_policy: always
+        ports:
+        - "5702:5702"
+#        - "8778:8778"
+        env:
+          CIAO_ETCD_URL: http://localhost:4001
+        volumes:
+        - "/opt/ciao/completed:/opt/ciao-docs-parser/completed"
+        - "/opt/ciao/error:/opt/ciao-docs-parser/error"
+        - "/opt/ciao/in-progress:/opt/ciao-docs-finalizer/in-progress"
+
+- name: Deploy ciao-transport-spine
+  hosts: ciaotransportspine
+  sudo: True
+#  vars:
+#    ciao_docs_parser_root: "test/"
+#  vars_files:
+#    - ciao-base-config.yml
+  tasks:     
+#    - name: Set configuration item X
+#      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
+    - name: Install ciao-transport-spine
+      docker:
+        name: ciao-transport-spine
+        image: hscic/ciao-transport-spine
+        state: restarted
+        restart_policy: always
+#        ports:
+#        - "8122:8122"
+#        - "8778:8778"
+#        volumes:
+#        - "{{ logstash_config_directory }}:/opt/keystores"
+
+- name: Deploy ciao-cda-builder
+  hosts: ciaocdabuilder
+  sudo: True
+  vars:
+    cip_name: "ciao-cda-builder"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+  vars_files:
+    - ciao-base-config.yml
+    - ciao-app-dss-config.yml
+  tasks:     
+# Fudge until NFS setup
+    - name: Create in-progress directory
+      file: path=/opt/ciao/in-progress state=directory
+    - name: Set configuration items in etcd
+      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
+      run_once: true
+      with_items:
+        - { key: 'camel.log.mdc', value: 'true' }
+        - { key: 'camel.log.trace', value: 'false' }
+        - { key: 'camel.log.debugStreams', value: 'false' }
+        - { key: 'processorConfig', value: 'default' }
+        - { key: 'messagingConfig', value: 'activemq' }
+        - { key: 'activemq.brokerURL', value: '{{ activemq_transport }}' }
+        - { key: 'activemq.userName', value: '{{ activemq_username }}' }
+        - { key: 'activemq.password', value: '{{ activemq_password }}' }
+        - { key: 'cdaBuilderRoutes', value: 'default' }
+        - { key: 'cdaBuilderRoutes.outputQueue', value: '{{ builder_out_q }}' }
+        - { key: 'cdaBuilderRoutes.processorId', value: 'processor' }
+        - { key: 'cdaBuilderRoutes.default.inputQueue', value: '{{ enricher_out_q }}' }
+        - { key: 'inputProgressFolder', value: '/opt/ciao-cda-builder/in-progress' }
+    - name: Install ciao-cda-builder
+      docker:
+        name: ciao-cda-builder
+        image: hscic/ciao-cda-builder
+        state: restarted
+        restart_policy: always
+#        ports:
+#        - "8778:8778"
+        env:
+          CIAO_ETCD_URL: http://localhost:4001
+        volumes:
+        - "/opt/ciao/in-progress:/opt/ciao-cda-builder/in-progress"
+
+- name: Deploy ciao-docs-enricher
+  hosts: ciaodocsenricher
+  sudo: True
+  vars:
+    cip_name: "ciao-docs-enricher"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+    json_directory: "/opt/ciao/json"
+  vars_files:
+    - ciao-base-config.yml
+    - ciao-app-dss-config.yml
+  tasks:     
+# Fudge until NFS setup
+    - name: Create in-progress directory
+      file: path=/opt/ciao/in-progress state=directory
+# Fudge until NFS setup
+    - name: Create json directory
+      file: path={{ json_directory }} state=directory
+    - name: Install enrich.json
+      copy: src=files/enrich.json dest={{ json_directory }}/enrich.json
+    - name: Set configuration items in etcd
+      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
+      run_once: true
+      with_items:
+        - { key: 'camel.log.mdc', value: 'true' }
+        - { key: 'camel.log.trace', value: 'false' }
+        - { key: 'camel.log.debugStreams', value: 'false' }
+        - { key: 'processorConfig', value: 'default' }
+        - { key: 'messagingConfig', value: 'activemq' }
+        - { key: 'activemq.brokerURL', value: '{{ activemq_transport }}' }
+        - { key: 'activemq.userName', value: '{{ activemq_username }}' }
+        - { key: 'activemq.password', value: '{{ activemq_password }}' }
+        - { key: 'documentEnricherRoutes', value: 'default' }
+        - { key: 'documentEnricherRoutes.outputQueue', value: '{{ enricher_out_q }}' }
+        - { key: 'documentEnricherRoutes.default.enricherId', value: 'staticJson' }
+        - { key: 'documentEnricherRoutes.default.inputQueue', value: '{{ parser_out_q }}' }
+        - { key: 'staticJson.resourcePaths', value: '/opt/ciao-docs-enricher/json/enrich.json' }
+        - { key: 'inputProgressFolder', value: '/opt/ciao-docs-enricher/in-progress' }
+    - name: Install ciao-docs-enricher
+      docker:
+        name: ciao-docs-enricher
+        image: hscic/ciao-docs-enricher
+        state: restarted
+        restart_policy: always
+#        ports:
+#        - "8778:8778"
+        env:
+          CIAO_ETCD_URL: http://localhost:4001
+        volumes:
+        - "/opt/ciao/json:/opt/ciao-docs-enricher/json"
+        - "/opt/ciao/in-progress:/opt/ciao-docs-enricher/in-progress"
+
+- name: Deploy ciao-docs-parser
+  hosts: ciaodocsparser
+  sudo: True
+  vars:
+    cip_name: "ciao-docs-parser"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+    hazelcast_port: "5701"
+    route_dn: "discharge-notification"
+    route_ed: "ed-discharge"
+    route_auto: "auto-detect"
+  vars_files:
+    - ciao-base-config.yml
+    - ciao-app-dss-config.yml
+  tasks:
+# Fudge until NFS setup
+    - name: Create input directory
+      file: path=/opt/ciao/input state=directory
+# Fudge until NFS setup
+    - name: Create error directory
+      file: path=/opt/ciao/error state=directory
+# Fudge until NFS setup
+    - name: Create in-progress directory
+      file: path=/opt/ciao/in-progress state=directory
+    - name: Set configuration items in etcd
+      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
+      run_once: true
+      with_items:
+        - { key: 'camel.log.mdc', value: 'true' }
+        - { key: 'camel.log.trace', value: 'false' }
+        - { key: 'camel.log.debugStreams', value: 'false' }
+        - { key: 'processorConfig', value: 'default' }
+        - { key: 'repositoryConfig', value: 'hazelcast' }
+        - { key: 'messagingConfig', value: 'activemq' }
+        - { key: 'activemq.brokerURL', value: '{{ activemq_transport }}' }
+        - { key: 'activemq.userName', value: '{{ activemq_username }}' }
+        - { key: 'activemq.password', value: '{{ activemq_password }}' }
+        - { key: 'hazelcast.group.name', value: 'ciao-docs-parser' }
+        - { key: 'hazelcast.group.password', value: 'mozart' }
+        - { key: 'hazelcast.network.port', value: '{{ hazelcast_port }}' }
+        - { key: 'hazelcast.network.join.tcp_ip.members', value: '{% for host in groups.ciaodocsparser %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}' }
+        - { key: 'hazelcast.network.join.multicast.enabled', value: 'false' }
+        - { key: 'documentParserRoutes', value: '{{ route_dn }},{{ route_ed }},{{ route_auto}}' }
+        - { key: 'documentParserRoutes.outputQueue', value: '{{ parser_out_q }}' }
+        - { key: 'documentParserRoutes.inProgressFolder', value: '/opt/ciao-docs-parser/in-progress' }
+        - { key: 'documentParserRoutes.idempotentRespositoryId', value: 'idempotentRespository' }
+        - { key: 'documentParserRoutes.inProgressRepositoryId', value: 'inProgressRepository' }
+        - { key: 'documentParserRoutes.{{ route_dn }}.inputFolder', value: '/opt/ciao-docs-parser/input/{{ route_dn }}' }
+        - { key: 'documentParserRoutes.{{ route_dn }}.completedFolder', value: '{{ completed_folder_root }}/{{ route_dn }}' } 
+        - { key: 'documentParserRoutes.{{ route_dn }}.errorFolder', value: '/opt/ciao-docs-parser/error/{{ route_dn }}' } 
+        - { key: 'documentParserRoutes.{{ route_dn }}.processorId', value: 'dischargeNotificationProcessor' }    
+        - { key: 'documentParserRoutes.{{ route_ed }}.inputFolder', value: '/opt/ciao-docs-parser/input/{{ route_ed }}' }
+        - { key: 'documentParserRoutes.{{ route_ed }}.completedFolder', value: '{{ completed_folder_root }}/{{ route_ed }}' } 
+        - { key: 'documentParserRoutes.{{ route_ed }}.errorFolder', value: '/opt/ciao-docs-parser/error/{{ route_ed }}' } 
+        - { key: 'documentParserRoutes.{{ route_ed }}.processorId', value: 'edDischargeProcessor' }     
+        - { key: 'documentParserRoutes.{{ route_auto }}.inputFolder', value: '/opt/ciao-docs-parser/input/{{ route_auto }}' }
+        - { key: 'documentParserRoutes.{{ route_auto }}.completedFolder', value: '{{ completed_folder_root }}/{{ route_auto }}' } 
+        - { key: 'documentParserRoutes.{{ route_auto }}.errorFolder', value: '/opt/ciao-docs-parser/error/{{ route_auto }}' } 
+        - { key: 'documentParserRoutes.{{ route_auto }}.processorId', value: 'autoDetectProcessor' }     
+    - name: Install ciao-docs-parser
+      docker:
+        name: ciao-docs-parser
+        image: hscic/ciao-docs-parser
+        state: restarted
+        restart_policy: always
+        ports:
+        - "5701:5701"
+#        - "8778:8778"
+        env:
+          CIAO_ETCD_URL: http://localhost:4001
+        volumes:
+        - "/opt/ciao/input:/opt/ciao-docs-parser/input"
+        - "/opt/ciao/error:/opt/ciao-docs-parser/error"
+        - "/opt/ciao/in-progress:/opt/ciao-docs-parser/in-progress"

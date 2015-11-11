@@ -1,0 +1,7 @@
+---
+# CIAO App Discharge Summary via Spine config variables
+#
+completed_folder_root: "/opt/ciao-docs-finalizer/completed"
+parser_out_q: "parsed-documents"
+enricher_out_q: "enriched-documents"
+builder_out_q: "cda-documents"
