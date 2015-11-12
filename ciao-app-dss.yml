@@ -136,57 +136,58 @@
 #        volumes:
 #        - "/opt/ciao/in-progress:/opt/ciao-cda-builder/in-progress"
 
-#- name: Deploy ciao-docs-enricher
-#  hosts: ciaodocsenricher
-#  sudo: True
-#  vars:
-#    cip_name: "ciao-docs-enricher"
-#    cip_version: "1.0.0-SNAPSHOT"
-#    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
-#    json_directory: "/opt/ciao/json"
-#  vars_files:
-#    - ciao-base-vars.yml
-#    - ciao-app-dss-vars.yml
-#  tasks:     
-## Fudge until NFS setup
-#    - name: Create in-progress directory
-#      file: path=/opt/ciao/in-progress state=directory
-## Fudge until NFS setup
-#    - name: Create json directory
-#      file: path={{ json_directory }} state=directory
-#    - name: Install enrich.json
-#      copy: src=files/enrich.json dest={{ json_directory }}/enrich.json
-#    - name: Set configuration items in etcd
-#      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
-#      run_once: true
-#      with_items:
-#        - { key: 'camel.log.mdc', value: 'true' }
-#        - { key: 'camel.log.trace', value: 'false' }
-#        - { key: 'camel.log.debugStreams', value: 'false' }
-#        - { key: 'processorConfig', value: 'default' }
-#        - { key: 'messagingConfig', value: 'activemq' }
-#        - { key: 'activemq.brokerURL', value: '{{ activemq_transport }}' }
-#        - { key: 'activemq.userName', value: '{{ activemq_username }}' }
-#        - { key: 'activemq.password', value: '{{ activemq_password }}' }
-#        - { key: 'documentEnricherRoutes', value: 'default' }
-#        - { key: 'documentEnricherRoutes.outputQueue', value: '{{ enricher_out_q }}' }
-#        - { key: 'documentEnricherRoutes.default.enricherId', value: 'staticJson' }
-#        - { key: 'documentEnricherRoutes.default.inputQueue', value: '{{ parser_out_q }}' }
-#        - { key: 'staticJson.resourcePaths', value: '/opt/ciao-docs-enricher/json/enrich.json' }
-#        - { key: 'inputProgressFolder', value: '/opt/ciao-docs-enricher/in-progress' }
-#    - name: Install ciao-docs-enricher
-#      docker:
-#        name: ciao-docs-enricher
-#        image: hscic/ciao-docs-enricher
-#        state: restarted
-#        restart_policy: always
-##        ports:
-##        - "8778:8778"
-#        env:
-#          CIAO_ETCD_URL: http://localhost:4001
-#        volumes:
-#        - "/opt/ciao/json:/opt/ciao-docs-enricher/json"
-#        - "/opt/ciao/in-progress:/opt/ciao-docs-enricher/in-progress"
+- name: Deploy ciao-docs-enricher
+  hosts: ciaodocsenricher
+  sudo: True
+  vars:
+    cip_name: "ciao-docs-enricher"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+    json_directory: "/opt/ciao/json"
+  vars_files:
+    - ciao-base-vars.yml
+    - ciao-app-dss-vars.yml
+  tasks:     
+# Fudge until NFS setup
+    - name: Create in-progress directory
+      file: path=/opt/ciao/in-progress state=directory
+# Fudge until NFS setup
+    - name: Create json directory
+      file: path={{ json_directory }} state=directory
+    - name: Install enrich.json
+      copy: src=files/enrich.json dest={{ json_directory }}/enrich.json
+    - name: Set configuration items in etcd
+      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
+      run_once: true
+      with_items:
+        - { key: 'configured', value: 'true' }
+        - { key: 'camel.log.mdc', value: 'true' }
+        - { key: 'camel.log.trace', value: 'false' }
+        - { key: 'camel.log.debugStreams', value: 'false' }
+        - { key: 'processorConfig', value: 'default' }
+        - { key: 'messagingConfig', value: 'activemq' }
+        - { key: 'activemq.brokerURL', value: '{{ activemq_transport }}' }
+        - { key: 'activemq.userName', value: '{{ activemq_username }}' }
+        - { key: 'activemq.password', value: '{{ activemq_password }}' }
+        - { key: 'documentEnricherRoutes', value: 'default' }
+        - { key: 'documentEnricherRoutes.outputQueue', value: '{{ enricher_out_q }}' }
+        - { key: 'documentEnricherRoutes.default.enricherId', value: 'staticJson' }
+        - { key: 'documentEnricherRoutes.default.inputQueue', value: '{{ parser_out_q }}' }
+        - { key: 'staticJson.resourcePaths', value: '/opt/ciao-docs-enricher/json/enrich.json' }
+        - { key: 'inputProgressFolder', value: '/opt/ciao-docs-enricher/in-progress' }
+    - name: Install ciao-docs-enricher
+      docker:
+        name: ciao-docs-enricher
+        image: hscic/ciao-docs-enricher
+        state: restarted
+        restart_policy: always
+#        ports:
+#        - "8778:8778"
+        env:
+          CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
+        volumes:
+        - "/opt/ciao/json:/opt/ciao-docs-enricher/json"
+        - "/opt/ciao/in-progress:/opt/ciao-docs-enricher/in-progress"
 
 - name: Deploy ciao-docs-parser
   hosts: ciaodocsparser
@@ -232,12 +233,12 @@
         - { key: 'hazelcast.network.port', value: '{{ hazelcast_port }}' }
         - { key: 'hazelcast.network.join.tcp_ip.members', value: '{% for host in groups.ciaodocsparser %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}' }
         - { key: 'hazelcast.network.join.multicast.enabled', value: 'false' }
-        - { key: 'documentParserRoutes', value: '{{ route_dn }},{{ route_ed }},{{ route_auto}}, {{ route_word }}' }
+        - { key: 'documentParserRoutes', value: '{{ route_dn }},{{ route_ed }},{{ route_auto}},{{ route_word }}' }
         - { key: 'documentParserRoutes.outputQueue', value: '{{ parser_out_q }}' }
         - { key: 'documentParserRoutes.inProgressFolder', value: '/opt/ciao-docs-parser/in-progress' }
         - { key: 'documentParserRoutes.idempotentRepositoryId', value: 'idempotentRepository' }
         - { key: 'documentParserRoutes.inProgressRepositoryId', value: 'inProgressRepository' }
-        - { key: 'documentParserRoutes.{{ route_dn }}.inputFolder', value: '/opt/ciao-docs-parser/input/{{ route_dn }}' }
+        - { key: 'documentParserRoutes.{{ route_dn }}.inputFolder', value: '/opt/ciao-docs-parser/input/{{ route_dn }},{{ route_word }}' }
         - { key: 'documentParserRoutes.{{ route_dn }}.completedFolder', value: '{{ completed_folder_root }}/{{ route_dn }}' } 
         - { key: 'documentParserRoutes.{{ route_dn }}.errorFolder', value: '/opt/ciao-docs-parser/error/{{ route_dn }}' } 
         - { key: 'documentParserRoutes.{{ route_dn }}.processorId', value: 'dischargeNotificationProcessor' }    
