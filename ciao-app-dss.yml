@@ -61,7 +61,7 @@
         state: restarted
         restart_policy: always
         ports:
-        - "5702:5702"
+        - "{{ hazelcast_port }}:{{ hazelcast_port }}"
 #        - "8778:8778"
         env:
           CIAO_ETCD_URL: http://localhost:4001
@@ -70,22 +70,22 @@
         - "/opt/ciao/error:/opt/ciao-docs-parser/error"
         - "/opt/ciao/in-progress:/opt/ciao-docs-finalizer/in-progress"
 
-- name: Deploy ciao-transport-spine
-  hosts: ciaotransportspine
-  sudo: True
+#- name: Deploy ciao-transport-spine
+#  hosts: ciaotransportspine
+#  sudo: True
 #  vars:
 #    ciao_docs_parser_root: "test/"
 #  vars_files:
 #    - ciao-base-vars.yml
-  tasks:     
+#  tasks:     
 #    - name: Set configuration item X
 #      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
-    - name: Install ciao-transport-spine
-      docker:
-        name: ciao-transport-spine
-        image: hscic/ciao-transport-spine
-        state: restarted
-        restart_policy: always
+#    - name: Install ciao-transport-spine
+#      docker:
+#        name: ciao-transport-spine
+#        image: hscic/ciao-transport-spine
+#        state: restarted
+#        restart_policy: always
 #        ports:
 #        - "8122:8122"
 #        - "8778:8778"
@@ -254,7 +254,7 @@
         state: restarted
         restart_policy: always
         ports:
-        - "5701:5701"
+        - "{{ hazelcast_port }}:{{ hazelcast_port }}"
 #        - "8778:8778"
         env:
           CIAO_ETCD_URL: http://localhost:4001
