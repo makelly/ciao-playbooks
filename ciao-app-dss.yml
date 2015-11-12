@@ -173,8 +173,8 @@
         - { key: 'documentEnricherRoutes.outputQueue', value: '{{ enricher_out_q }}' }
         - { key: 'documentEnricherRoutes.default.enricherId', value: 'staticJson' }
         - { key: 'documentEnricherRoutes.default.inputQueue', value: '{{ parser_out_q }}' }
-        - { key: 'staticJson.resourcePaths', value: '/opt/ciao-docs-enricher/json/enrich.json' }
-        - { key: 'inputProgressFolder', value: '/opt/ciao-docs-enricher/in-progress' }
+        - { key: 'staticJson.resourcePaths', value: 'file:///opt/ciao-docs-enricher/json/enrich.json' }
+        - { key: 'inProgressFolder', value: '/opt/ciao-docs-enricher/in-progress' }
     - name: Install ciao-docs-enricher
       docker:
         name: ciao-docs-enricher
