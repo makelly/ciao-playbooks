@@ -47,7 +47,7 @@
     nagios_config_timeperiods_directory: "/opt/ciao_nagios/etc/timeperiods"
     nagios_config_contacts_directory: "/opt/ciao_nagios/etc/contacts"
   vars_files:
-    - ciao-base-config.yml 
+    - ciao-base-vars.yml 
   tasks:
     - name: Create Nagios configuration directory
       file: path={{ nagios_config_directory }} state=directory
@@ -91,7 +91,7 @@
   serial: 1
   sudo: True
   vars_files:
-    - ciao-base-config.yml
+    - ciao-base-vars.yml
   tasks:
     - name: Install host configurations for all hosts in the CIAO cloud
       template: src=templates/host.cfg.j2 dest={{ nagios_config_hosts_directory }}/{{ inventory_hostname }}.cfg
@@ -189,7 +189,7 @@
     activemq_broker_name: "CiaoBroker"
     activemq_config_directory: "/opt/ciao_activemq/conf"
   vars_files:
-    - ciao-base-config.yml
+    - ciao-base-vars.yml
   tasks:
     - name: Create ActiveMQ configuration directory
       file: path={{ activemq_config_directory }} state=directory

@@ -25,7 +25,7 @@
     etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
     hazelcast_port: "5702"
   vars_files:
-    - ciao-base-config.yml
+    - ciao-base-vars.yml
   tasks:
 # Fudge until NFS setup
     - name: Create error directory
@@ -76,7 +76,7 @@
 #  vars:
 #    ciao_docs_parser_root: "test/"
 #  vars_files:
-#    - ciao-base-config.yml
+#    - ciao-base-vars.yml
   tasks:     
 #    - name: Set configuration item X
 #      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
@@ -100,8 +100,8 @@
     cip_version: "1.0.0-SNAPSHOT"
     etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
   vars_files:
-    - ciao-base-config.yml
-    - ciao-app-dss-config.yml
+    - ciao-base-vars.yml
+    - ciao-app-dss-vars.yml
   tasks:     
 # Fudge until NFS setup
     - name: Create in-progress directory
@@ -145,8 +145,8 @@
     etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
     json_directory: "/opt/ciao/json"
   vars_files:
-    - ciao-base-config.yml
-    - ciao-app-dss-config.yml
+    - ciao-base-vars.yml
+    - ciao-app-dss-vars.yml
   tasks:     
 # Fudge until NFS setup
     - name: Create in-progress directory
@@ -200,8 +200,8 @@
     route_ed: "ed-discharge"
     route_auto: "auto-detect"
   vars_files:
-    - ciao-base-config.yml
-    - ciao-app-dss-config.yml
+    - ciao-base-vars.yml
+    - ciao-app-dss-vars.yml
   tasks:
 # Fudge until NFS setup
     - name: Create input directory
