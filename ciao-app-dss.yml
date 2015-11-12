@@ -199,6 +199,7 @@
     route_dn: "discharge-notification"
     route_ed: "ed-discharge"
     route_auto: "auto-detect"
+    route_word: "word-discharge-notification"
   vars_files:
     - ciao-base-vars.yml
     - ciao-app-dss-vars.yml
@@ -231,7 +232,7 @@
         - { key: 'hazelcast.network.port', value: '{{ hazelcast_port }}' }
         - { key: 'hazelcast.network.join.tcp_ip.members', value: '{% for host in groups.ciaodocsparser %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}' }
         - { key: 'hazelcast.network.join.multicast.enabled', value: 'false' }
-        - { key: 'documentParserRoutes', value: '{{ route_dn }},{{ route_ed }},{{ route_auto}}' }
+        - { key: 'documentParserRoutes', value: '{{ route_dn }},{{ route_ed }},{{ route_auto}}, {{ route_word }}' }
         - { key: 'documentParserRoutes.outputQueue', value: '{{ parser_out_q }}' }
         - { key: 'documentParserRoutes.inProgressFolder', value: '/opt/ciao-docs-parser/in-progress' }
         - { key: 'documentParserRoutes.idempotentRepositoryId', value: 'idempotentRepository' }
@@ -247,7 +248,11 @@
         - { key: 'documentParserRoutes.{{ route_auto }}.inputFolder', value: '/opt/ciao-docs-parser/input/{{ route_auto }}' }
         - { key: 'documentParserRoutes.{{ route_auto }}.completedFolder', value: '{{ completed_folder_root }}/{{ route_auto }}' } 
         - { key: 'documentParserRoutes.{{ route_auto }}.errorFolder', value: '/opt/ciao-docs-parser/error/{{ route_auto }}' } 
-        - { key: 'documentParserRoutes.{{ route_auto }}.processorId', value: 'autoDetectProcessor' }     
+        - { key: 'documentParserRoutes.{{ route_auto }}.processorId', value: 'autoDetectProcessor' } 
+        - { key: 'documentParserRoutes.{{ route_word }}.inputFolder', value: '/opt/ciao-docs-parser/input/{{ route_word }}' }
+        - { key: 'documentParserRoutes.{{ route_word }}.completedFolder', value: '{{ completed_folder_root }}/{{ route_word }}' } 
+        - { key: 'documentParserRoutes.{{ route_word }}.errorFolder', value: '/opt/ciao-docs-parser/error/{{ route_word }}' } 
+        - { key: 'documentParserRoutes.{{ route_word }}.processorId', value: 'wordDischargeNotificationProcessor' }         
     - name: Install ciao-docs-parser
       docker:
         name: ciao-docs-parser
