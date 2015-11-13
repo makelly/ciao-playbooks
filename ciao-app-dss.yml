@@ -159,7 +159,7 @@
         - { key: 'camel.log.mdc', value: 'true' }
         - { key: 'camel.log.trace', value: 'false' }
         - { key: 'camel.log.debugStreams', value: 'false' }
-        - { key: 'processorConfig', value: 'default' }
+        - { key: 'processorConfig', value: 'include-json' }
         - { key: 'messagingConfig', value: 'activemq' }
         - { key: 'activemq.brokerURL', value: '{{ activemq_transport }}' }
         - { key: 'activemq.userName', value: '{{ activemq_username }}' }
@@ -168,7 +168,7 @@
         - { key: 'documentEnricherRoutes.outputQueue', value: '{{ enricher_out_q }}' }
         - { key: 'documentEnricherRoutes.default.enricherId', value: 'staticJson' }
         - { key: 'documentEnricherRoutes.default.inputQueue', value: '{{ parser_out_q }}' }
-        - { key: 'staticJson.resourcePaths', value: 'file:///opt/ciao-docs-enricher/json/enrich.json' }
+        - { key: 'json.resourcePaths', value: 'file:///opt/ciao-docs-enricher/json/enrich.json' }
         - { key: 'inProgressFolder', value: '/opt/ciao-docs-enricher/in-progress' }
     - name: Install ciao-docs-enricher
       docker:
@@ -217,9 +217,11 @@
         - { key: 'hazelcast.group.name', value: 'ciao-docs-parser' }
         - { key: 'hazelcast.group.password', value: 'mozart' }
         - { key: 'hazelcast.network.port', value: '{{ hazelcast_port }}' }
+        - { key: 'hazelcast.network.publicAddress', value: '' } 
         - { key: 'hazelcast.network.join.tcp_ip.members', value: '{% for host in groups.ciaodocsparser %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}' }
         - { key: 'hazelcast.network.join.multicast.enabled', value: 'false' }
-        - { key: 'hazelcast.network.publicAddress', value: '' } 
+        - { key: 'hazelcast.network.join.multicast.group', value: '' } 
+       - { key: 'hazelcast.network.join.multicast.port', value: '' } 
         - { key: 'documentParserRoutes', value: '{{ route_dn }},{{ route_ed }},{{ route_auto}},{{ route_word }}' }
         - { key: 'documentParserRoutes.outputQueue', value: '{{ parser_out_q }}' }
         - { key: 'documentParserRoutes.inProgressFolder', value: '/opt/ciao-docs-parser/in-progress' }
