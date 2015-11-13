@@ -220,7 +220,7 @@
         - { key: 'hazelcast.network.publicAddress', value: '' } 
         - { key: 'hazelcast.network.join.tcp_ip.members', value: '{% for host in groups.ciaodocsparser %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}' }
         - { key: 'hazelcast.network.join.multicast.enabled', value: 'false' }
-        - { key: 'hazelcast.network.join.multicast.group', value: '' } 
+        - { key: 'hazelcast.network.join.multicast.group', value: '224.2.2.3' } 
         - { key: 'hazelcast.network.join.multicast.port', value: '0' } 
         - { key: 'documentParserRoutes', value: '{{ route_dn }},{{ route_ed }},{{ route_auto}},{{ route_word }}' }
         - { key: 'documentParserRoutes.outputQueue', value: '{{ parser_out_q }}' }
