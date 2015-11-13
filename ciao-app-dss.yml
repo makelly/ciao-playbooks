@@ -143,19 +143,12 @@
     cip_name: "ciao-docs-enricher"
     cip_version: "1.0.0-SNAPSHOT"
     etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
-    json_directory: "/opt/ciao/json"
   vars_files:
     - ciao-base-vars.yml
     - ciao-app-dss-vars.yml
-  tasks:     
-# Fudge until NFS setup
-    - name: Create in-progress directory
-      file: path=/opt/ciao/in-progress state=directory
-# Fudge until NFS setup
-    - name: Create json directory
-      file: path={{ json_directory }} state=directory
+  tasks:
     - name: Install enrich.json
-      copy: src=files/enrich.json dest={{ json_directory }}/enrich.json
+      copy: src=files/enrich.json dest=/opt/ciao-docs-enricher/json/enrich.json
     - name: Set configuration items in etcd
       shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
       run_once: true
@@ -186,8 +179,8 @@
         env:
           CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
         volumes:
-        - "/opt/ciao/json:/opt/ciao-docs-enricher/json"
-        - "/opt/ciao/in-progress:/opt/ciao-docs-enricher/in-progress"
+        - "{{ json_folder }}:/opt/ciao-docs-enricher/json"
+        - "{{ inprogress_folder }}:/opt/ciao-docs-enricher/in-progress"
 
 - name: Deploy ciao-docs-parser
   hosts: ciaodocsparser
@@ -205,15 +198,6 @@
     - ciao-base-vars.yml
     - ciao-app-dss-vars.yml
   tasks:
-# Fudge until NFS setup
-    - name: Create input directory
-      file: path=/opt/ciao/input state=directory
-# Fudge until NFS setup
-    - name: Create error directory
-      file: path=/opt/ciao/error state=directory
-# Fudge until NFS setup
-    - name: Create in-progress directory
-      file: path=/opt/ciao/in-progress state=directory
     - name: Set configuration items in etcd
       shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
       run_once: true
@@ -233,6 +217,7 @@
         - { key: 'hazelcast.network.port', value: '{{ hazelcast_port }}' }
         - { key: 'hazelcast.network.join.tcp_ip.members', value: '{% for host in groups.ciaodocsparser %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}' }
         - { key: 'hazelcast.network.join.multicast.enabled', value: 'false' }
+        - { key: 'hazelcast.network.publicAddress', value: '' } 
         - { key: 'documentParserRoutes', value: '{{ route_dn }},{{ route_ed }},{{ route_auto}},{{ route_word }}' }
         - { key: 'documentParserRoutes.outputQueue', value: '{{ parser_out_q }}' }
         - { key: 'documentParserRoutes.inProgressFolder', value: '/opt/ciao-docs-parser/in-progress' }
@@ -268,6 +253,6 @@
         env:
           CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
         volumes:
-        - "/opt/ciao/input:/opt/ciao-docs-parser/input"
-        - "/opt/ciao/error:/opt/ciao-docs-parser/error"
-        - "/opt/ciao/in-progress:/opt/ciao-docs-parser/in-progress"
+        - "{{ input_folder }}:/opt/ciao-docs-parser/input"
+        - "{{ error_folder }}:/opt/ciao-docs-parser/error"
+        - "{{ inprogress_folder }}:/opt/ciao-docs-parser/in-progress"
