@@ -9,6 +9,9 @@ chico
 [nagios]
 chico
 
+[etcdbrowser]
+chico
+
 [logspout]
 harpo
 groucho

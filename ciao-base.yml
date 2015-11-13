@@ -109,6 +109,19 @@
       delegate_to: "{{ item }}" 
       with_items: groups.nagios
 
+- name: Deploy etcd Browser
+  hosts: etcdbrowser
+  sudo: True
+  tasks:
+    - name: Install etcd browser
+      docker:
+        name: ciao-etcdbrowser
+        image: buddho/etcd-browser
+        state: restarted
+        restart_policy: always
+        ports:
+        - "7999:8000"
+
 - name: Deploy Logspout
   hosts: logspout
   sudo: True
