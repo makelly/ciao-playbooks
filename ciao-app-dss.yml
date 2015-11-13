@@ -147,6 +147,8 @@
     - ciao-base-vars.yml
     - ciao-app-dss-vars.yml
   tasks:
+    - name: Create json directory
+      file: path=/opt/ciao-docs-enricher/json state=directory
     - name: Install enrich.json
       copy: src=files/enrich.json dest=/opt/ciao-docs-enricher/json/enrich.json
     - name: Set configuration items in etcd
