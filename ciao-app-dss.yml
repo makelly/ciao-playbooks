@@ -233,19 +233,19 @@
         - { key: 'documentParserRoutes.idempotentRepositoryId', value: 'idempotentRepository' }
         - { key: 'documentParserRoutes.inProgressRepositoryId', value: 'inProgressRepository' }
         - { key: 'documentParserRoutes.{{ route_dn }}.inputFolder', value: '/opt/ciao-docs-parser/input/{{ route_dn }},{{ route_word }}' }
-        - { key: 'documentParserRoutes.{{ route_dn }}.completedFolder', value: '{{ completed_folder_root }}/{{ route_dn }}' } 
+        - { key: 'documentParserRoutes.{{ route_dn }}.completedFolder', value: '{{ completed_folder }}/{{ route_dn }}' } 
         - { key: 'documentParserRoutes.{{ route_dn }}.errorFolder', value: '/opt/ciao-docs-parser/error/{{ route_dn }}' } 
         - { key: 'documentParserRoutes.{{ route_dn }}.processorId', value: 'dischargeNotificationProcessor' }    
         - { key: 'documentParserRoutes.{{ route_ed }}.inputFolder', value: '/opt/ciao-docs-parser/input/{{ route_ed }}' }
-        - { key: 'documentParserRoutes.{{ route_ed }}.completedFolder', value: '{{ completed_folder_root }}/{{ route_ed }}' } 
+        - { key: 'documentParserRoutes.{{ route_ed }}.completedFolder', value: '{{ completed_folder }}/{{ route_ed }}' } 
         - { key: 'documentParserRoutes.{{ route_ed }}.errorFolder', value: '/opt/ciao-docs-parser/error/{{ route_ed }}' } 
         - { key: 'documentParserRoutes.{{ route_ed }}.processorId', value: 'edDischargeProcessor' }     
         - { key: 'documentParserRoutes.{{ route_auto }}.inputFolder', value: '/opt/ciao-docs-parser/input/{{ route_auto }}' }
-        - { key: 'documentParserRoutes.{{ route_auto }}.completedFolder', value: '{{ completed_folder_root }}/{{ route_auto }}' } 
+        - { key: 'documentParserRoutes.{{ route_auto }}.completedFolder', value: '{{ completed_folder }}/{{ route_auto }}' } 
         - { key: 'documentParserRoutes.{{ route_auto }}.errorFolder', value: '/opt/ciao-docs-parser/error/{{ route_auto }}' } 
         - { key: 'documentParserRoutes.{{ route_auto }}.processorId', value: 'autoDetectProcessor' } 
         - { key: 'documentParserRoutes.{{ route_word }}.inputFolder', value: '/opt/ciao-docs-parser/input/{{ route_word }}' }
-        - { key: 'documentParserRoutes.{{ route_word }}.completedFolder', value: '{{ completed_folder_root }}/{{ route_word }}' } 
+        - { key: 'documentParserRoutes.{{ route_word }}.completedFolder', value: '{{ completed_folder }}/{{ route_word }}' } 
         - { key: 'documentParserRoutes.{{ route_word }}.errorFolder', value: '/opt/ciao-docs-parser/error/{{ route_word }}' } 
         - { key: 'documentParserRoutes.{{ route_word }}.processorId', value: 'wordDischargeNotificationProcessor' } 
     - name: Set instance configuration items in etcd
