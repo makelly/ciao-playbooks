@@ -244,7 +244,7 @@
         - { key: 'documentParserRoutes.{{ route_word }}.errorFolder', value: '/opt/ciao-docs-parser/error/{{ route_word }}' } 
         - { key: 'documentParserRoutes.{{ route_word }}.processorId', value: 'wordDischargeNotificationProcessor' } 
     - name: Set instance configuration items in etcd
-      shell: curl {{ etcd_path }}{{ hostname }}/{{ item_key }} -XPUT -d value="{{ item.value }}"
+      shell: curl {{ etcd_path }}{{ ansible_hostname }}/{{ item_key }} -XPUT -d value="{{ item.value }}"
       with_items:
         - { key: 'configured', value: 'true' }
         - { key: 'parent.cip.name', value: '{{ cip_name }}' }
