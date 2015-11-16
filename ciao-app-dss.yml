@@ -92,49 +92,47 @@
 #        volumes:
 #        - "{{ logstash_config_directory }}:/opt/keystores"
 
-#- name: Deploy ciao-cda-builder
-#  hosts: ciaocdabuilder
-#  sudo: True
-#  vars:
-#    cip_name: "ciao-cda-builder"
-#    cip_version: "1.0.0-SNAPSHOT"
-#    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
-#  vars_files:
-#    - ciao-base-vars.yml
-#    - ciao-app-dss-vars.yml
-#  tasks:     
-## Fudge until NFS setup
-#    - name: Create in-progress directory
-#      file: path=/opt/ciao/in-progress state=directory
-#    - name: Set configuration items in etcd
-#      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
-#      run_once: true
-#      with_items:
-#        - { key: 'camel.log.mdc', value: 'true' }
-#        - { key: 'camel.log.trace', value: 'false' }
-#        - { key: 'camel.log.debugStreams', value: 'false' }
-#        - { key: 'processorConfig', value: 'default' }
-#        - { key: 'messagingConfig', value: 'activemq' }
-#        - { key: 'activemq.brokerURL', value: '{{ activemq_transport }}' }
-#        - { key: 'activemq.userName', value: '{{ activemq_username }}' }
-#        - { key: 'activemq.password', value: '{{ activemq_password }}' }
-#        - { key: 'cdaBuilderRoutes', value: 'default' }
-#        - { key: 'cdaBuilderRoutes.outputQueue', value: '{{ builder_out_q }}' }
-#        - { key: 'cdaBuilderRoutes.processorId', value: 'processor' }
-#        - { key: 'cdaBuilderRoutes.default.inputQueue', value: '{{ enricher_out_q }}' }
-#        - { key: 'inputProgressFolder', value: '/opt/ciao-cda-builder/in-progress' }
-#    - name: Install ciao-cda-builder
-#      docker:
-#        name: ciao-cda-builder
-#        image: hscic/ciao-cda-builder
-#        state: restarted
-#        restart_policy: always
+- name: Deploy ciao-cda-builder
+  hosts: ciaocdabuilder
+  sudo: True
+  vars:
+    cip_name: "ciao-cda-builder"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+  vars_files:
+    - ciao-base-vars.yml
+    - ciao-app-dss-vars.yml
+  tasks:     
+    - name: Set configuration items in etcd
+      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
+      run_once: true
+      with_items:
+        - { key: 'configured', value: 'true' }
+        - { key: 'camel.log.mdc', value: 'true' }
+        - { key: 'camel.log.trace', value: 'false' }
+        - { key: 'camel.log.debugStreams', value: 'false' }
+        - { key: 'processorConfig', value: 'default' }
+        - { key: 'messagingConfig', value: 'activemq' }
+        - { key: 'activemq.brokerURL', value: '{{ activemq_transport }}' }
+        - { key: 'activemq.userName', value: '{{ activemq_username }}' }
+        - { key: 'activemq.password', value: '{{ activemq_password }}' }
+        - { key: 'cdaBuilderRoutes', value: 'default' }
+        - { key: 'cdaBuilderRoutes.outputQueue', value: '{{ builder_out_q }}' }
+        - { key: 'cdaBuilderRoutes.processorId', value: 'processor' }
+        - { key: 'cdaBuilderRoutes.default.inputQueue', value: '{{ enricher_out_q }}' }
+        - { key: 'inputProgressFolder', value: '/opt/ciao-cda-builder/in-progress' }
+    - name: Install ciao-cda-builder
+      docker:
+        name: ciao-cda-builder
+        image: hscic/ciao-cda-builder
+        state: restarted
+        restart_policy: always
 ##        ports:
 ##        - "8778:8778"
-#        env:
-#          CIAO_ETCD_URL: http://localhost:4001
-#        volumes:
-#        - "/opt/ciao/in-progress:/opt/ciao-cda-builder/in-progress"
+        env:
+          CIAO_ETCD_URL: http://localhost:4001
+        volumes:
+        - "{{ inprogress_folder }}:/opt/ciao-cda-builder/in-progress"
 
 - name: Deploy ciao-docs-enricher
   hosts: ciaodocsenricher
@@ -262,7 +260,7 @@
 #        - "8778:8778"
         env:
           CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
-          CIAO_CONFIG_CLASSIFIER: {{ inventory_hostname }}
+          CIAO_CONFIG_CLASSIFIER: "{{ inventory_hostname }}"
         volumes:
         - "{{ input_folder }}:/opt/ciao-docs-parser/input"
         - "{{ error_folder }}:/opt/ciao-docs-parser/error"
