@@ -73,8 +73,8 @@
           CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
           CIAO_CONFIG_CLASSIFIER: "{{ inventory_hostname }}"
         volumes:
-        - "{{ completed_folder }}:/opt/ciao-docs-parser/completed"
-        - "{{ error_folder }}:/opt/ciao-docs-parser/error"
+        - "{{ completed_folder }}:/opt/ciao-docs-finalizer/completed"
+        - "{{ error_folder }}:/opt/ciao-docs-finalizer/error"
         - "{{ inprogress_folder }}:/opt/ciao-docs-finalizer/in-progress"
 
 #- name: Deploy ciao-transport-spine
