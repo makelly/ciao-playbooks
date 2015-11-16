@@ -8,6 +8,7 @@
   tasks:
     - name: Stop all CIP containers
       shell: docker stop {{ item }}
+      ignore_errors: yes
       with_items:
         - ciao-docs-parser
         - ciao-docs-enricher
@@ -17,6 +18,7 @@
         - ciao-docs-finalizer
     - name: Remove all CIP containers
       shell: docker rm {{ item }}
+      ignore_errors: yes
       with_items:
         - ciao-docs-parser
         - ciao-docs-enricher
@@ -26,6 +28,7 @@
         - ciao-docs-finalizer
     - name: Remove all CIP images
       shell: docker rmi {{ item }}
+      ignore_errors: yes
         - ciao-docs-parser
         - ciao-docs-enricher
         - ciao-cda-builder
