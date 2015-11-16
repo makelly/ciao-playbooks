@@ -149,8 +149,8 @@
   tasks:
     - name: Create json directory
       file: path=/opt/ciao-docs-enricher/json state=directory
-    - name: Install enrich.json
-      copy: src=files/enrich.json dest=/opt/ciao-docs-enricher/json/enrich.json
+    - name: Install kings-static.json
+      copy: src=files/kings-static.json dest=/opt/ciao-docs-enricher/json/kings-static.json
     - name: Set configuration items in etcd
       shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
       run_once: true
@@ -168,7 +168,7 @@
         - { key: 'documentEnricherRoutes.outputQueue', value: '{{ enricher_out_q }}' }
         - { key: 'documentEnricherRoutes.default.enricherId', value: 'enricher' }
         - { key: 'documentEnricherRoutes.default.inputQueue', value: '{{ parser_out_q }}' }
-        - { key: 'json.resourcePaths', value: 'file:///opt/ciao-docs-enricher/json/enrich.json' }
+        - { key: 'json.resourcePaths', value: 'file:///opt/ciao-docs-enricher/json/kings-static.json' }
         - { key: 'inProgressFolder', value: '/opt/ciao-docs-enricher/in-progress' }
     - name: Install ciao-docs-enricher
       docker:
