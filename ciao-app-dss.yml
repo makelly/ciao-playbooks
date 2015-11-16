@@ -151,13 +151,13 @@
       file: path=/opt/ciao-docs-enricher/json state=directory
     - name: Install kings-static.json
       copy: src=files/kings-static.json dest=/opt/ciao-docs-enricher/json/kings-static.json
-    - name: Set configuration items in etcd
+    - name: Set configuration items in etcd 
       shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
       run_once: true
       with_items:
         - { key: 'configured', value: 'true' }
-        - { key: 'camel.log.mdc', value: 'true' }
-        - { key: 'camel.log.trace', value: 'false' }
+        - { key: 'parent.cip.name', value: 'true' }
+        - { key: 'parent.cip.version', value: 'false' }
         - { key: 'camel.log.debugStreams', value: 'false' }
         - { key: 'processorConfig', value: 'include-json' }
         - { key: 'messagingConfig', value: 'activemq' }
@@ -200,7 +200,7 @@
     - ciao-base-vars.yml
     - ciao-app-dss-vars.yml
   tasks:
-    - name: Set configuration items in etcd
+    - name: Set parent configuration items in etcd
       shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
       run_once: true
       with_items:
@@ -242,7 +242,14 @@
         - { key: 'documentParserRoutes.{{ route_word }}.inputFolder', value: '/opt/ciao-docs-parser/input/{{ route_word }}' }
         - { key: 'documentParserRoutes.{{ route_word }}.completedFolder', value: '{{ completed_folder_root }}/{{ route_word }}' } 
         - { key: 'documentParserRoutes.{{ route_word }}.errorFolder', value: '/opt/ciao-docs-parser/error/{{ route_word }}' } 
-        - { key: 'documentParserRoutes.{{ route_word }}.processorId', value: 'wordDischargeNotificationProcessor' }         
+        - { key: 'documentParserRoutes.{{ route_word }}.processorId', value: 'wordDischargeNotificationProcessor' } 
+    - name: Set instance configuration items in etcd
+      shell: curl {{ etcd_path }}{{ hostname }}/{{ item_key }} -XPUT -d value="{{ item.value }}"
+      with_items:
+        - { key: 'configured', value: 'true' }
+        - { key: 'parent.cip.name', value: '{{ cip_name }}' }
+        - { key: 'parent.cip.version', value: '{{ cip_version }}' }
+        - { key: 'hazelcast.network.publicAddress', value: '{{ ansible_default_ipv4.address }}' }      
     - name: Install ciao-docs-parser
       docker:
         name: ciao-docs-parser
