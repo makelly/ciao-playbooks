@@ -256,13 +256,13 @@
         image: hscic/ciao-docs-parser
         state: restarted
         restart_policy: always
-# Fudge until hazelcast sorted
         net: host
-#        ports:
-#        - "{{ hazelcast_port }}:5701"
+        ports:
+        - "{{ hazelcast_port }}:5701"
 #        - "8778:8778"
         env:
           CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
+          CIAO_CONFIG_CLASSIFIER: {{ inventory_hostname }}
         volumes:
         - "{{ input_folder }}:/opt/ciao-docs-parser/input"
         - "{{ error_folder }}:/opt/ciao-docs-parser/error"
