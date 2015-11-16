@@ -1,0 +1,34 @@
+---
+# Clean CIPs
+#
+
+- name: Clean down CIPs on hosts
+  hosts: all
+  sudo: True
+  tasks:
+    - name: Stop all CIP containers
+      shell: docker stop {{ item }}
+      with_items:
+        - ciao-docs-parser
+        - ciao-docs-enricher
+        - ciao-cda-builder
+        - ciao-transport-spine
+        - ciao-transport-dts
+        - ciao-docs-finalizer
+    - name: Remove all CIP containers
+      shell: docker rm {{ item }}
+      with_items:
+        - ciao-docs-parser
+        - ciao-docs-enricher
+        - ciao-cda-builder
+        - ciao-transport-spine
+        - ciao-transport-dts
+        - ciao-docs-finalizer
+    - name: Remove all CIP images
+      shell: docker rmi {{ item }}
+        - ciao-docs-parser
+        - ciao-docs-enricher
+        - ciao-cda-builder
+        - ciao-transport-spine
+        - ciao-transport-dts
+        - ciao-docs-finalizer
