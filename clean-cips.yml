@@ -29,9 +29,10 @@
     - name: Remove all CIP images
       shell: docker rmi {{ item }}
       ignore_errors: yes
-        - ciao-docs-parser
-        - ciao-docs-enricher
-        - ciao-cda-builder
-        - ciao-transport-spine
-        - ciao-transport-dts
-        - ciao-docs-finalizer
+      with_items:
+        - hscic/ciao-docs-parser
+        - hscic/ciao-docs-enricher
+        - hscic/ciao-cda-builder
+        - hscic/ciao-transport-spine
+        - hscic/ciao-transport-dts
+        - hscic/ciao-docs-finalizer

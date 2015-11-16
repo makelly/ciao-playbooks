@@ -16,59 +16,66 @@
         ports:
         - "4002:4001"
 
-#- name: Deploy ciao-docs-finalizer
-#  hosts: ciaodocsfinalizer
-#  sudo: True
-#  vars:
-#    cip_name: "ciao-docs-finalizer"
-#    cip_version: "1.0.0-SNAPSHOT"
-#    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
-#    hazelcast_port: "5702"
-#  vars_files:
-#    - ciao-base-vars.yml
-#  tasks:
-## Fudge until NFS setup
-#    - name: Create error directory
-#      file: path=/opt/ciao/error state=directory
-## Fudge until NFS setup
-#    - name: Create in-progress directory
-#      file: path=/opt/ciao/in-progress state=directory
-#    - name: Set configuration items in etcd
-#      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
-#      run_once: true
-#      with_items:
-#        - { key: 'camel.log.mdc', value: 'true' }
-#        - { key: 'camel.log.trace', value: 'false' }
-#        - { key: 'camel.log.debugStreams', value: 'false' }
-#        - { key: 'processorConfig', value: 'default' }
-#        - { key: 'repositoryConfig', value: 'hazelcast' }
-#        - { key: 'hazelcast.group.name', value: 'ciao-docs-finalizer' }
-#        - { key: 'hazelcast.group.password', value: 'liszt' }
-#        - { key: 'hazelcast.network.port', value: '{{ hazelcast_port }}' }
-#        - { key: 'hazelcast.network.join.tcp_ip.members', value: '{% for host in groups.ciaodocsfinalizer %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}' }
-#        - { key: 'hazelcast.network.join.multicast.enabled', value: 'false' }
-#        - { key: 'inProgressFolderPollPeriod', value: '500' }
-#        - { key: 'inProgressFolder', value: '/opt/ciao-docs-finalizer/in-progress' }
-#        - { key: 'documentPreparationTimeout', value: '60000' }
-#        - { key: 'documentSendTimeout', value: '18000' }
-#        - { key: 'infResponseTimeout', value: '300000' }
-#        - { key: 'busResponseTimeout', value: '17280000' }
-#        - { key: 'idempotentActions', value: 'to=SUCCEEDED > MoveToCompletedFolder\nto=FAILED > MoveToErrorFolder' }
-#    - name: Install ciao-docs-finalizer
-#      docker:
-#        name: ciao-docs-finalizer
-#        image: hscic/ciao-docs-finalizer
-#        state: restarted
-#        restart_policy: always
-#        ports:
-#        - "{{ hazelcast_port }}:{{ hazelcast_port }}"
+- name: Deploy ciao-docs-finalizer
+  hosts: ciaodocsfinalizer
+  sudo: True
+  vars:
+    cip_name: "ciao-docs-finalizer"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+    hazelcast_port: "5702"
+  vars_files:
+    - ciao-base-vars.yml
+    - ciao-app-dss-vars.yml
+  tasks:
+    - name: Set parent configuration items in etcd
+      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
+      run_once: true
+      with_items:
+        - { key: 'configured', value: 'true' }
+        - { key: 'camel.log.mdc', value: 'true' }
+        - { key: 'camel.log.trace', value: 'false' }
+        - { key: 'camel.log.debugStreams', value: 'false' }
+        - { key: 'processorConfig', value: 'default' }
+        - { key: 'repositoryConfig', value: 'hazelcast' }
+        - { key: 'hazelcast.group.name', value: 'ciao-docs-finalizer' }
+        - { key: 'hazelcast.group.password', value: 'liszt' }
+        - { key: 'hazelcast.network.port', value: '{{ hazelcast_port }}' }
+        - { key: 'hazelcast.network.publicAddress', value: '' } 
+        - { key: 'hazelcast.network.join.tcp_ip.members', value: '{% for host in groups.ciaodocsfinalizer %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}' }
+        - { key: 'hazelcast.network.join.multicast.enabled', value: 'false' }
+        - { key: 'hazelcast.network.join.multicast.group', value: '224.2.2.3' } 
+        - { key: 'hazelcast.network.join.multicast.port', value: '0' } 
+        - { key: 'inProgressFolderPollPeriod', value: '500' }
+        - { key: 'inProgressFolder', value: '/opt/ciao-docs-finalizer/in-progress' }
+        - { key: 'documentPreparationTimeout', value: '60000' }
+        - { key: 'documentSendTimeout', value: '18000' }
+        - { key: 'infResponseTimeout', value: '300000' }
+        - { key: 'busResponseTimeout', value: '17280000' }
+        - { key: 'idempotentActions', value: 'to=SUCCEEDED > MoveToCompletedFolder\nto=FAILED > MoveToErrorFolder' }
+    - name: Set instance configuration items in etcd
+      shell: curl {{ etcd_path }}{{ inventory_hostname }}/{{ item.key }} -XPUT -d value="{{ item.value }}"
+      with_items:
+        - { key: 'configured', value: 'true' }
+        - { key: 'parent.cip.name', value: '{{ cip_name }}' }
+        - { key: 'parent.cip.version', value: '{{ cip_version }}' }
+        - { key: 'hazelcast.network.publicAddress', value: '{{ ansible_default_ipv4.address }}' }
+    - name: Install ciao-docs-finalizer
+      docker:
+        name: ciao-docs-finalizer
+        image: hscic/ciao-docs-finalizer
+        state: restarted
+        restart_policy: always
+        ports:
+        - "{{ hazelcast_port }}:{{ hazelcast_port }}"
 ##        - "8778:8778"
-#        env:
-#          CIAO_ETCD_URL: http://localhost:4001
-#        volumes:
-#        - "/opt/ciao/completed:/opt/ciao-docs-parser/completed"
-#        - "/opt/ciao/error:/opt/ciao-docs-parser/error"
-#        - "/opt/ciao/in-progress:/opt/ciao-docs-finalizer/in-progress"
+        env:
+          CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
+          CIAO_CONFIG_CLASSIFIER: "{{ inventory_hostname }}"
+        volumes:
+        - "{{ completed_folder }}:/opt/ciao-docs-parser/completed"
+        - "{{ error_folder }}:/opt/ciao-docs-parser/error"
+        - "{{ inprogress_folder }}:/opt/ciao-docs-finalizer/in-progress"
 
 #- name: Deploy ciao-transport-spine
 #  hosts: ciaotransportspine
@@ -130,7 +137,7 @@
 ##        ports:
 ##        - "8778:8778"
         env:
-          CIAO_ETCD_URL: http://localhost:4001
+          CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
         volumes:
         - "{{ inprogress_folder }}:/opt/ciao-cda-builder/in-progress"
 

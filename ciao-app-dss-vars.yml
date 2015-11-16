@@ -1,9 +1,8 @@
 ---
 # CIAO App Discharge Summary via Spine config variables
 #
-# ?
-completed_folder_root: "/opt/ciao-docs-finalizer/completed"
 
+completed_folder: "/opt/ciao/completed"
 input_folder: "/opt/ciao/input"
 error_folder: "/opt/ciao/error"
 inprogress_folder: "/opt/ciao/in-progress"
