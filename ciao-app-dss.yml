@@ -24,12 +24,13 @@
     cip_version: "1.0.0-SNAPSHOT"
     etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
     hazelcast_port: "5702"
+    cip_parent: "common"
   vars_files:
     - ciao-base-vars.yml
     - ciao-app-dss-vars.yml
   tasks:
     - name: Set parent configuration items in etcd
-      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
+      shell: curl {{ etcd_path }}{{ cip_parent }}/{{ item.key }} -XPUT -d value="{{ item.value }}"
       run_once: true
       with_items:
         - { key: 'configured', value: 'true' }
@@ -59,6 +60,7 @@
         - { key: 'configured', value: 'true' }
         - { key: 'parent.cip.name', value: '{{ cip_name }}' }
         - { key: 'parent.cip.version', value: '{{ cip_version }}' }
+        - { key: 'parent.cip.classifier', value: '{{ cip_parent }}' }
         - { key: 'hazelcast.network.publicAddress', value: '{{ ansible_default_ipv4.address }}' }
     - name: Install ciao-docs-finalizer
       docker:
@@ -201,12 +203,13 @@
     route_ed: "ed-discharge"
     route_auto: "auto-detect"
     route_word: "word-discharge-notification"
+    cip_parent: "common"
   vars_files:
     - ciao-base-vars.yml
     - ciao-app-dss-vars.yml
   tasks:
     - name: Set parent configuration items in etcd
-      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
+      shell: curl {{ etcd_path }}{{ cip_parent }}/{{ item.key }} -XPUT -d value="{{ item.value }}"
       run_once: true
       with_items:
         - { key: 'configured', value: 'true' }
@@ -254,6 +257,7 @@
         - { key: 'configured', value: 'true' }
         - { key: 'parent.cip.name', value: '{{ cip_name }}' }
         - { key: 'parent.cip.version', value: '{{ cip_version }}' }
+        - { key: 'parent.cip.classifier', value: '{{ cip_parent }}' }
         - { key: 'hazelcast.network.publicAddress', value: '{{ ansible_default_ipv4.address }}' }      
     - name: Install ciao-docs-parser
       docker:
