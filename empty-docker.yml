@@ -1,8 +1,8 @@
 ---
-# Clean docker
+# Empty docker
 #
 
-- name: Clean down docker on hosts
+- name: Empty docker on hosts
   hosts: all
   sudo: True
   tasks:
