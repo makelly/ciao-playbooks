@@ -129,7 +129,7 @@
         - { key: 'cdaBuilderRoutes.outputQueue', value: '{{ builder_out_q }}' }
         - { key: 'cdaBuilderRoutes.processorId', value: 'processor' }
         - { key: 'cdaBuilderRoutes.default.inputQueue', value: '{{ enricher_out_q }}' }
-        - { key: 'inputProgressFolder', value: '/opt/ciao-cda-builder/in-progress' }
+        - { key: 'inProgressFolder', value: '/opt/ciao-cda-builder/in-progress' }
     - name: Install ciao-cda-builder
       docker:
         name: ciao-cda-builder
