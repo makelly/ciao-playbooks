@@ -155,14 +155,14 @@
     - ciao-app-dss-vars.yml
   tasks:
     - name: Install kings-static.json
-      copy: src=files/kings-static.json dest={{ json_folder }}/kings-static.json
+      copy: src=files/kings-static.json dest=/opt/ciao-docs-enricher/json/kings-static.json
     - name: Set configuration items in etcd 
       shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
       run_once: true
       with_items:
         - { key: 'configured', value: 'true' }
-        - { key: 'parent.cip.name', value: 'true' }
-        - { key: 'parent.cip.version', value: 'false' }
+        - { key: 'camel.log.mdc', value: 'true' }
+        - { key: 'camel.log.trace', value: 'false' }
         - { key: 'camel.log.debugStreams', value: 'false' }
         - { key: 'processorConfig', value: 'include-json' }
         - { key: 'messagingConfig', value: 'activemq' }
@@ -186,7 +186,7 @@
         env:
           CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
         volumes:
-        - "{{ json_folder }}:/opt/ciao-docs-enricher/json"
+        - "/opt/ciao-docs-enricher/json:/opt/ciao-docs-enricher/json"
         - "{{ inprogress_folder }}:/opt/ciao-docs-enricher/in-progress"
 
 - name: Deploy ciao-docs-parser
