@@ -53,7 +53,8 @@
         - { key: 'documentSendTimeout', value: '18000' }
         - { key: 'infResponseTimeout', value: '300000' }
         - { key: 'busResponseTimeout', value: '17280000' }
-        - { key: 'idempotentActions', value: 'to=SUCCEEDED > MoveToCompletedFolder\nto=FAILED > MoveToErrorFolder' }
+        - { key: 'idempotentActions', value: 'true' }
+        - { key: 'actions', value: 'to=SUCCEEDED > MoveToCompletedFolder\nto=FAILED > MoveToErrorFolder' }
     - name: Set instance configuration items in etcd
       shell: curl {{ etcd_path }}{{ inventory_hostname }}/{{ item.key }} -XPUT -d value="{{ item.value }}"
       with_items:
