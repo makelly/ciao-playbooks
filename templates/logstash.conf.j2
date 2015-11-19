@@ -1,5 +1,11 @@
-input { syslog { } }
-output {
-  elasticsearch { host => localhost }
-  stdout { codec => rubydebug }
+input
+{ 
+  syslog { } 
+}
+output 
+{
+  elasticsearch 
+  { 
+    hosts => ["localhost:9200"]
+  }
 }
