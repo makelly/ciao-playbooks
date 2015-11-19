@@ -197,6 +197,7 @@
 
 - name: Deploy ActiveMQ cluster
   hosts: activemq
+  serial: 1
   sudo: True
   vars:
     activemq_broker_name: "CiaoBroker"
