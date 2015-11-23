@@ -121,6 +121,7 @@
     - name: Install service configurations for all hosts running logstash
       template: src=templates/logstash.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-logstash.cfg
       delegate_to: "{{ item }}" 
+      with_items: groups.nagios
     - name: Install service configurations for all hosts running elastic
       template: src=templates/elastic.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-elastic.cfg
       delegate_to: "{{ item }}" 
