@@ -105,7 +105,7 @@
         restart_policy: always
         ports:
         - "{{ kibana_port }}:80"
-        - "514:514"
+        - "{{ logstash_port }}:514"
         - "{{ elastic_port }}:9200"
         volumes:
         - "{{ logstash_config_directory }}:/etc/logstash"
@@ -118,6 +118,9 @@
   vars_files:
     - ciao-base-vars.yml
   tasks:
+    - name: Install service configurations for all hosts running logstash
+      template: src=templates/logstash.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-logstash.cfg
+      delegate_to: "{{ item }}" 
     - name: Install service configurations for all hosts running elastic
       template: src=templates/elastic.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-elastic.cfg
       delegate_to: "{{ item }}" 
@@ -133,8 +136,6 @@
         state: restarted
       delegate_to: "{{ item }}" 
       with_items: groups.nagios
-
-# Need to deploy Nagios monitoring of Logstash
 
 - name: Deploy etcd Browser
   hosts: etcdbrowser

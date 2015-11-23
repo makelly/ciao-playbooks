@@ -1,7 +1,7 @@
 define service{
     host_name                      {{ inventory_hostname }}
-    service_description            LOGSPOUT
-    check_command                  check_tcp!{{ logspout_port }}! -I {{ ansible_default_ipv4.address }} 
+    service_description            LOGSTASH
+    check_command                  check_tcp!{{ logstash_port }}! -I {{ ansible_default_ipv4.address }} 
     check_interval                 10
     check_period                   24x7
     retry_interval                 3
