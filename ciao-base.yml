@@ -348,8 +348,27 @@
         state: restarted
         restart_policy: always
         ports:
-        - "8161:8161"
+        - "{{ amqconsole_port }}:8161"
         - "61616:61616"
         - "61619:61619"
         volumes:
         - "{{ activemq_config_directory }}:/opt/activemq/conf"
+
+- name: Deploy Nagios service configurations for monitoring ActiveMQ
+  hosts: activemq
+  serial: 1
+  sudo: True
+  vars_files:
+    - ciao-base-vars.yml
+  tasks:
+    - name: Install service configurations for all hosts running ActiveMQ Web Console
+      template: src=templates/amqconsole.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-amqconsole.cfg
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
+    - name: Restart Nagios
+      docker:
+        name: ciao-nagios
+        image: cpuguy83/nagios
+        state: restarted
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
