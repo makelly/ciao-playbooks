@@ -262,6 +262,8 @@
   vars:
     zoo_config_directory: "/opt/ciao_zookeeper/conf"
     zoo_data_directory: "/var/lib/ciao_zookeeper"
+  vars_files:
+    - ciao-base-vars.yml
   tasks:
     - name: Create ZooKeeper configuration directory
       file: path={{ zoo_config_directory }} state=directory
@@ -280,12 +282,31 @@
         state: restarted
         restart_policy: always
         ports:
-        - "2181:2181"
+        - "{{ zookeeper_port }}:2181"
         - "2888:2888"
         - "3888:3888"
         volumes:
         - "{{ zoo_config_directory }}:/opt/zookeeper/conf"
         - "{{ zoo_data_directory }}:/tmp/zookeeper"
+
+- name: Deploy Nagios service configurations for monitoring zookeeper
+  hosts: zookeeper
+  serial: 1
+  sudo: True
+  vars_files:
+    - ciao-base-vars.yml
+  tasks:
+    - name: Install service configurations for all hosts running zookeeper
+      template: src=templates/zookeeper.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-zookeeper.cfg
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
+    - name: Restart Nagios
+      docker:
+        name: ciao-nagios
+        image: cpuguy83/nagios
+        state: restarted
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
 
 - name: Deploy ActiveMQ cluster
   hosts: activemq
