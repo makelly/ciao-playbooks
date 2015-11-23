@@ -88,6 +88,8 @@
   vars:
     logstash_config_directory: "/opt/ciao_logstash/conf"
     elastic_data_directory: "/opt/ciao_elastic/data" 
+  vars_files:
+    - ciao-base-vars.yml
   tasks:
     - name: Create Logstash configuration directory
       file: path={{ logstash_config_directory }} state=directory
@@ -102,14 +104,37 @@
         state: restarted
         restart_policy: always
         ports:
-        - "8080:80"
+        - "{{ kibana_port }}:80"
         - "514:514"
-        - "9200:9200"
+        - "{{ elastic_port }}:9200"
         volumes:
         - "{{ logstash_config_directory }}:/etc/logstash"
         - "{{ elastic_data_directory }}:/data"
 
-# Need to deploy Nagios monitoring of ELK
+- name: Deploy Nagios service configurations for monitoring ELK
+  hosts: elk
+  serial: 1
+  sudo: True
+  vars_files:
+    - ciao-base-vars.yml
+  tasks:
+    - name: Install service configurations for all hosts running elastic
+      template: src=templates/elastic.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-elastic.cfg
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
+    - name: Install service configurations for all hosts running kibana
+      template: src=templates/kibana.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-kibana.cfg
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
+    - name: Restart Nagios
+      docker:
+        name: ciao-nagios
+        image: cpuguy83/nagios
+        state: restarted
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
+
+# Need to deploy Nagios monitoring of Logstash
 
 - name: Deploy etcd Browser
   hosts: etcdbrowser
