@@ -109,6 +109,8 @@
         - "{{ logstash_config_directory }}:/etc/logstash"
         - "{{ elastic_data_directory }}:/data"
 
+# Need to deploy Nagios monitoring of ELK
+
 - name: Deploy etcd Browser
   hosts: etcdbrowser
   sudo: True
@@ -146,6 +148,8 @@
 - name: Deploy Logspout
   hosts: logspout
   sudo: True
+  vars_files:
+    - ciao-base-vars.yml
   tasks:
     - name: Install Logspout
       docker:
@@ -155,9 +159,28 @@
         restart_policy: always
         command: "{% for host in groups.elk %}syslog://{{ hostvars[host].ansible_default_ipv4.address }}:514{% if not loop.last %},{% endif %}{% endfor %}"
         ports:
-        - "8000:8000"
+        - "{{ logspout_port }}:8000"
         volumes:
         - "/var/run/docker.sock:/tmp/docker.sock"
+
+- name: Deploy Nagios service configurations for monitoring logspout
+  hosts: logspout
+  serial: 1
+  sudo: True
+  vars_files:
+    - ciao-base-vars.yml
+  tasks:
+    - name: Install service configurations for all hosts running etcd Browser
+      template: src=templates/logspout.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-logspout.cfg
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
+    - name: Restart Nagios
+      docker:
+        name: ciao-nagios
+        image: cpuguy83/nagios
+        state: restarted
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
 
 - name: Deploy etcd cluster
   hosts: etcd
