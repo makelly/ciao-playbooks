@@ -170,7 +170,7 @@
   vars_files:
     - ciao-base-vars.yml
   tasks:
-    - name: Install service configurations for all hosts running etcd Browser
+    - name: Install service configurations for all hosts running logspout
       template: src=templates/logspout.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-logspout.cfg
       delegate_to: "{{ item }}" 
       with_items: groups.nagios
@@ -187,6 +187,8 @@
   sudo: True
   vars:
     etcd_cluster: "{% for host in groups.etcd %}etcd-{{ hostvars[host].inventory_hostname }}=http://{{ hostvars[host].ansible_default_ipv4.address }}:2380{% if not loop.last %},{% endif %}{% endfor %}"
+  vars_files:
+    - ciao-base-vars.yml
   tasks:
     - name: Install etcd
       docker:
@@ -195,7 +197,7 @@
         state: restarted
         restart_policy: always
         ports:
-        - "4001:4001"
+        - "{{ etcd_port }}:4001"
         - "2380:2380"
         - "2379:2379"
         env:
@@ -207,6 +209,25 @@
           ETCD_INITIAL_CLUSTER_TOKEN: etcd-cluster-ciao
           ETCD_INITIAL_CLUSTER: "{{ etcd_cluster }}"
           ETCD_INITIAL_CLUSTER_STATE: new 
+
+- name: Deploy Nagios service configurations for monitoring etcd
+  hosts: etcd
+  serial: 1
+  sudo: True
+  vars_files:
+    - ciao-base-vars.yml
+  tasks:
+    - name: Install service configurations for all hosts running etcd
+      template: src=templates/etcd.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-etcd.cfg
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
+    - name: Restart Nagios
+      docker:
+        name: ciao-nagios
+        image: cpuguy83/nagios
+        state: restarted
+      delegate_to: "{{ item }}" 
+      with_items: groups.nagios
 
 - name: Deploy ZooKeeper cluster
   hosts: zookeeper
