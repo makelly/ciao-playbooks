@@ -71,7 +71,8 @@
         restart_policy: always
         ports:
         - "{{ hazelcast_port }}:{{ hazelcast_port }}"
-##        - "8778:8778"
+# Placeholder for potential JMX port
+#        - "8778:8778"
         env:
           CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
           CIAO_CONFIG_CLASSIFIER: "{{ inventory_hostname }}"
@@ -80,27 +81,111 @@
         - "{{ error_folder }}:/opt/ciao-docs-finalizer/error"
         - "{{ inprogress_folder }}:/opt/ciao-docs-finalizer/in-progress"
 
-#- name: Deploy ciao-transport-spine
-#  hosts: ciaotransportspine
-#  sudo: True
-#  vars:
-#    ciao_docs_parser_root: "test/"
-#  vars_files:
-#    - ciao-base-vars.yml
-#  tasks:     
-#    - name: Set configuration item X
-#      shell: curl {{ path }}{{ key }} -XPUT -d value="Hello Mike"
-#    - name: Install ciao-transport-spine
-#      docker:
-#        name: ciao-transport-spine
-#        image: hscic/ciao-transport-spine
-#        state: restarted
-#        restart_policy: always
-#        ports:
-#        - "8122:8122"
+- name: Deploy ciao-transport-dts
+  hosts: ciaotransportdts
+  sudo: True
+  vars:
+    cip_name: "ciao-transport-dts"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+    hazelcast_port: "5703"
+  vars_files:
+    - ciao-base-vars.yml
+  tasks:     
+    - name: Set configuration items in etcd
+      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
+      run_once: true
+      with_items:
+        - { key: 'configured', value: 'true' }
+        - { key: 'camel.log.mdc', value: 'true' }
+        - { key: 'camel.log.trace', value: 'false' }
+        - { key: 'camel.log.debugStreams', value: 'false' }
+        - { key: 'processorConfig', value: 'default' }
+        - { key: 'messagingConfig', value: 'activemq' }
+        - { key: 'repositoryConfig', value: 'hazelcast' }
+        - { key: 'addressingConfig', value: 'static' }
+        - { key: 'activemq.brokerURL', value: '{{ activemq_transport }}' }
+        - { key: 'activemq.userName', value: '{{ activemq_username }}' }
+        - { key: 'activemq.password', value: '{{ activemq_password }}' }
+        - { key: 'jms.concurrentConsumers', value: '20' }
+        - { key: 'hazelcast.group.name', value: 'ciao-transport-dts' }
+        - { key: 'hazelcast.group.password', value: 'debussy' }
+        - { key: 'hazelcast.network.port', value: '{{ hazelcast_port }}' }
+        - { key: 'hazelcast.network.publicAddress', value: '' } 
+        - { key: 'hazelcast.network.join.tcp_ip.members', value: '{% for host in groups.ciaotransportdts %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}' }
+        - { key: 'hazelcast.network.join.multicast.enabled', value: 'false' }
+        - { key: 'hazelcast.network.join.multicast.group', value: '224.2.2.3' } 
+        - { key: 'hazelcast.network.join.multicast.port', value: '0' } 
+# Other configuration items to be set
+        - { key: 'inProgressFolder', value: '/opt/ciao-transport-dts/in-progress' }
+    - name: Install ciao-transport-dts
+      docker:
+        name: ciao-transport-dts
+        image: hscic/ciao-transport-dts
+        state: restarted
+        restart_policy: always
+        ports:
+        - "{{ hazelcast_port }}:{{ hazelcast_port }}"
+# Placeholder for potential JMX port
 #        - "8778:8778"
-#        volumes:
-#        - "{{ logstash_config_directory }}:/opt/keystores"
+        env:
+          CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
+        volumes:
+        - "{{ inprogress_folder }}:/opt/ciao-transport-dts/in-progress"
+
+
+- name: Deploy ciao-transport-spine
+  hosts: ciaotransportspine
+  sudo: True
+  vars:
+    cip_name: "ciao-transport-spine"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+    hazelcast_port: "5704"
+  vars_files:
+    - ciao-base-vars.yml
+  tasks:     
+    - name: Set configuration items in etcd
+      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
+      run_once: true
+      with_items:
+        - { key: 'configured', value: 'true' }
+        - { key: 'camel.log.mdc', value: 'true' }
+        - { key: 'camel.log.trace', value: 'false' }
+        - { key: 'camel.log.debugStreams', value: 'false' }
+        - { key: 'processorConfig', value: 'default' }
+        - { key: 'messagingConfig', value: 'activemq' }
+        - { key: 'repositoryConfig', value: 'hazelcast' }
+        - { key: 'addressingConfig', value: 'static' }
+        - { key: 'sslConfig', value: 'vanilla' }
+        - { key: 'activemq.brokerURL', value: '{{ activemq_transport }}' }
+        - { key: 'activemq.userName', value: '{{ activemq_username }}' }
+        - { key: 'activemq.password', value: '{{ activemq_password }}' }
+        - { key: 'jms.concurrentConsumers', value: '20' }
+        - { key: 'hazelcast.group.name', value: 'ciao-transport-spine' }
+        - { key: 'hazelcast.group.password', value: 'puccini' }
+        - { key: 'hazelcast.network.port', value: '{{ hazelcast_port }}' }
+        - { key: 'hazelcast.network.publicAddress', value: '' } 
+        - { key: 'hazelcast.network.join.tcp_ip.members', value: '{% for host in groups.ciaotransportdts %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}' }
+        - { key: 'hazelcast.network.join.multicast.enabled', value: 'false' }
+        - { key: 'hazelcast.network.join.multicast.group', value: '224.2.2.3' } 
+        - { key: 'hazelcast.network.join.multicast.port', value: '0' } 
+# Other configuration items to be set
+        - { key: 'inProgressFolder', value: '/opt/ciao-transport-dts/in-progress' }
+    - name: Install ciao-transport-spine
+      docker:
+        name: ciao-transport-spine
+        image: hscic/ciao-transport-spine
+        state: restarted
+        restart_policy: always
+        ports:
+        - "{{ hazelcast_port }}:{{ hazelcast_port }}"
+# Placeholder for potential JMX port
+#        - "8778:8778"
+        env:
+          CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
+        volumes:
+        - "{{ inprogress_folder }}:/opt/ciao-transport-spine/in-progress"
 
 - name: Deploy ciao-cda-builder
   hosts: ciaocdabuilder
@@ -137,12 +222,60 @@
         image: hscic/ciao-cda-builder
         state: restarted
         restart_policy: always
-##        ports:
-##        - "8778:8778"
+        ports:
+# Placeholder for potential JMX port
+#        - "8778:8778"
         env:
           CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
         volumes:
         - "{{ inprogress_folder }}:/opt/ciao-cda-builder/in-progress"
+
+- name: Deploy ciao-docs-transformer
+  hosts: ciaodocstransformer
+  sudo: True
+  vars:
+    cip_name: "ciao-docs-transformer"
+    cip_version: "1.0.0-SNAPSHOT"
+    etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
+    route_kings: "kings"
+    route_kent: "kent"
+  vars_files:
+    - ciao-base-vars.yml
+    - ciao-app-dss-vars.yml
+  tasks:     
+    - name: Set configuration items in etcd
+      shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
+      run_once: true
+      with_items:
+        - { key: 'configured', value: 'true' }
+        - { key: 'camel.log.mdc', value: 'true' }
+        - { key: 'camel.log.trace', value: 'false' }
+        - { key: 'camel.log.debugStreams', value: 'false' }
+        - { key: 'processorConfig', value: 'default' }
+        - { key: 'messagingConfig', value: 'activemq' }
+        - { key: 'activemq.brokerURL', value: '{{ activemq_transport }}' }
+        - { key: 'activemq.userName', value: '{{ activemq_username }}' }
+        - { key: 'activemq.password', value: '{{ activemq_password }}' }
+        - { key: 'documentTransformerRoutes', value: '{{ route_kings }},{{ route_kent }}' }
+        - { key: 'documentTransformerRoutes.outputQueue', value: '{{ transformer_out_q }}' }
+        - { key: 'documentTransformerRoutes.{{ route_kings }}.inputQueue', value: 'parsed-kings-documents' }
+        - { key: 'documentTransformerRoutes.{{ route_kings }}.transformerId', value: 'kingsWordDischargeNotificationTransformer' }
+        - { key: 'documentTransformerRoutes.{{ route_kent }}.inputQueue', value: 'parsed-kent-documents' }
+        - { key: 'documentTransformerRoutes.{{ route_kent }}.transformerId', value: 'kentEDNTransformer' }
+        - { key: 'inProgressFolder', value: '/opt/ciao-docs-transformer/in-progress' }
+    - name: Install ciao-docs-transformer
+      docker:
+        name: ciao-docs-transformer
+        image: hscic/ciao-docs-transformer
+        state: restarted
+        restart_policy: always
+        ports:
+# Placeholder for potential JMX port
+#        - "8778:8778"
+        env:
+          CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
+        volumes:
+        - "{{ inprogress_folder }}:/opt/ciao-docs-transformer/in-progress"
 
 - name: Deploy ciao-docs-enricher
   hosts: ciaodocsenricher
@@ -182,7 +315,8 @@
         image: hscic/ciao-docs-enricher
         state: restarted
         restart_policy: always
-#        ports:
+        ports:
+# Placeholder for potential JMX port
 #        - "8778:8778"
         env:
           CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
@@ -267,6 +401,7 @@
         net: host
         ports:
         - "{{ hazelcast_port }}:5701"
+# Placeholder for potential JMX port
 #        - "8778:8778"
         env:
           CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
