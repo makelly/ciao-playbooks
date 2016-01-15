@@ -89,6 +89,8 @@
     cip_version: "1.0.0-SNAPSHOT"
     etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
     hazelcast_port: "5703"
+    dts_folder: "/opt/dts"
+    ciao_folder: "/opt/ciao-trasnsport-dts"
   vars_files:
     - ciao-base-vars.yml
   tasks:     
@@ -116,7 +118,21 @@
         - { key: 'hazelcast.network.join.multicast.enabled', value: 'false' }
         - { key: 'hazelcast.network.join.multicast.group', value: '224.2.2.3' } 
         - { key: 'hazelcast.network.join.multicast.port', value: '0' } 
-# Other configuration items to be set
+        - { key: 'addressing.staticFiles', value: '' }
+        - { key: 'senderODSCode', value: '!REQUIRED!' } 
+        - { key: 'auditODSCode', value: '!OPTIONAL!' } 
+        - { key: 'senderItkService', value: 'urn:nhs-itk:services:201005:sendDistEnvelope' } 
+        - { key: 'itkDocumentSenderQueue', value: 'cda-documents' } 
+        - { key: 'distributionEnvelopeReceiverQueue', value: 'distribution-envelope-receiver' } 
+        - { key: 'itkMessageReceiverQueue', value: 'itk-message-receiver' } 
+        - { key: 'dts.rootFolder', value: '/opt/ciao-transport-dts/dts' } 
+        - { key: 'dts.temporaryFolder', value: '/opt/ciao-transport-dts/dts-temp' } 
+        - { key: 'dts.filePrefix', value: '!REQUIRED!' } 
+        - { key: 'dts.workflowId', value: 'TOC_DISCH_DMS' } 
+        - { key: 'dts.senderMailbox', value: '!REQUIRED!' } 
+        - { key: 'dts.receiverWorkflowIds', value: 'TOC_DISCH_DMS_ACK' } 
+        - { key: 'dts.errorFolder', value: '/opt/ciao-transport-dts/dts-error' } 
+        - { key: 'dts.completedFolder', value: '/opt/ciao-transport-dts/dts-completed' } 
         - { key: 'inProgressFolder', value: '/opt/ciao-transport-dts/in-progress' }
     - name: Install ciao-transport-dts
       docker:
@@ -132,7 +148,8 @@
           CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
         volumes:
         - "{{ inprogress_folder }}:/opt/ciao-transport-dts/in-progress"
-
+        - "{{ dts_folder }}:/opt/dts"
+        - "{{ ciao_folder }}:/opt/ciao-transport-dts"
 
 - name: Deploy ciao-transport-spine
   hosts: ciaotransportspine
@@ -142,6 +159,8 @@
     cip_version: "1.0.0-SNAPSHOT"
     etcd_path: "{{ etcd_root }}{{ cip_name }}/{{ cip_version }}/"
     hazelcast_port: "5704"
+    spine_receive_port: "8122"
+    keystore_folder: "/opt/keystores"
   vars_files:
     - ciao-base-vars.yml
   tasks:     
@@ -162,15 +181,41 @@
         - { key: 'activemq.userName', value: '{{ activemq_username }}' }
         - { key: 'activemq.password', value: '{{ activemq_password }}' }
         - { key: 'jms.concurrentConsumers', value: '20' }
+        - { key: 'jms.concurrentConsumers2', value: '2' }
         - { key: 'hazelcast.group.name', value: 'ciao-transport-spine' }
         - { key: 'hazelcast.group.password', value: 'puccini' }
         - { key: 'hazelcast.network.port', value: '{{ hazelcast_port }}' }
         - { key: 'hazelcast.network.publicAddress', value: '' } 
-        - { key: 'hazelcast.network.join.tcp_ip.members', value: '{% for host in groups.ciaotransportdts %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}' }
+        - { key: 'hazelcast.network.join.tcp_ip.members', value: '{% for host in groups.ciaotransportspine %}{{ hostvars[host].ansible_default_ipv4.address }}:{{ hazelcast_port }}{% if not loop.last %},{% endif %}{% endfor %}' }
         - { key: 'hazelcast.network.join.multicast.enabled', value: 'false' }
         - { key: 'hazelcast.network.join.multicast.group', value: '224.2.2.3' } 
         - { key: 'hazelcast.network.join.multicast.port', value: '0' } 
-# Other configuration items to be set
+        - { key: 'spine.toUri', value: 'http://localhost:8123/' } 
+        - { key: 'spine.fromUri', value: 'jetty:http://localhost:{{ spine_recieve_port }}/' } 
+        - { key: 'spine.replyUri', value: 'jms2:topic:document-ebxml-acks' } 
+        - { key: 'TRUST_STORE', value: '/opt/keystores/SpineDEVCerts.keystore' } 
+        - { key: 'TRUST_STORE_PW', value: 'password' } 
+        - { key: 'KEY_STORE', value: '/opt/keystores/SpineCiaoTest1.keystore' } 
+        - { key: 'KEY_STORE_PW', value: 'password' } 
+        - { key: 'KEY_PASSWORD', value: 'password' } 
+        - { key: 'sds.url', value: 'ldap://localhost:1234' } 
+        - { key: 'sds.authentication', value: 'simple' } 
+        - { key: 'sds.principal', value: 'cn=Manager,dc=example,dc=com' } 
+        - { key: 'sds.credentials', value: 'passw0rd' } 
+        - { key: 'addressing.staticFiles', value: '' } 
+        - { key: 'addressing.sdsCacheUri', value: 'hazelcast:map:spine-endpoint-addresses' } 
+        - { key: 'senderPartyId', value: '!REQUIRED!' } 
+        - { key: 'senderAsid', value: '!REQUIRED!' } 
+        - { key: 'senderODSCode', value: '!REQUIRED!' } 
+        - { key: 'auditODSCode', value: '!OPTIONAL!' } 
+        - { key: 'senderItkService', value: 'urn:nhs-itk:services:201005:sendDistEnvelope' } 
+        - { key: 'senderService', value: 'urn:nhs:names:services:itk' } 
+        - { key: 'senderAction', value: 'COPC_IN000001GB01' } 
+        - { key: 'itkDocumentSenderQueue', value: 'cda-documents' } 
+        - { key: 'multipartMessageSenderQueue', value: 'multipart-message-sender' } 
+        - { key: 'multipartMessageResponseQueue', value: 'multipart-message-responses' }
+        - { key: 'distributionEnvelopeReceiverQueue', value: 'distribution-envelope-receiver' } 
+        - { key: 'itkMessageReceiverQueue', value: 'itk-message-receiver' }  
         - { key: 'inProgressFolder', value: '/opt/ciao-transport-dts/in-progress' }
     - name: Install ciao-transport-spine
       docker:
@@ -180,12 +225,14 @@
         restart_policy: always
         ports:
         - "{{ hazelcast_port }}:{{ hazelcast_port }}"
+        - "{{ spine_receive_port }}:{{ spine_receive_port }}"
 # Placeholder for potential JMX port
 #        - "8778:8778"
         env:
           CIAO_ETCD_URL: http://{{ ansible_default_ipv4.address }}:4001
         volumes:
         - "{{ inprogress_folder }}:/opt/ciao-transport-spine/in-progress"
+        - "{{ keystore_folder }}:/opt/keystores"
 
 - name: Deploy ciao-cda-builder
   hosts: ciaocdabuilder
