@@ -1,7 +1,7 @@
 define service{
     host_name                      {{ inventory_hostname }}
     service_description            ACTIVEMQ WEB CONSOLE
-    check_command                  check_http! -I {{ ansible_default_ipv4.address }} -p {{ amqconsole_port }} -u /admin
+    check_command                  check_http! -I {{ ansible_default_ipv4.address }} -p {{ amqconsole_port }} -u /admin -a admin:admin
     check_interval                 10
     check_period                   24x7
     retry_interval                 3
