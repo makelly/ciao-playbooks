@@ -4,7 +4,7 @@
 
 - name: Empty CIPs on hosts
   hosts: all
-  sudo: True
+  become: True
   tasks:
     - name: Stop all CIP containers
       shell: docker stop {{ item }}
@@ -12,6 +12,7 @@
       with_items:
         - ciao-docs-parser
         - ciao-docs-enricher
+        - ciao-docs-transformer
         - ciao-cda-builder
         - ciao-transport-spine
         - ciao-transport-dts
@@ -22,6 +23,7 @@
       with_items:
         - ciao-docs-parser
         - ciao-docs-enricher
+        - ciao-docs-transformer
         - ciao-cda-builder
         - ciao-transport-spine
         - ciao-transport-dts
@@ -32,6 +34,7 @@
       with_items:
         - hscic/ciao-docs-parser
         - hscic/ciao-docs-enricher
+        - hscic/ciao-docs-transformer
         - hscic/ciao-cda-builder
         - hscic/ciao-transport-spine
         - hscic/ciao-transport-dts

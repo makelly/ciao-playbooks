@@ -12,6 +12,7 @@
       with_items:
         - ciao-docs-parser
         - ciao-docs-enricher
+        - ciao-docs-transformer
         - ciao-cda-builder
         - ciao-transport-spine
         - ciao-transport-dts
@@ -22,6 +23,7 @@
       with_items:
         - ciao-docs-parser
         - ciao-docs-enricher
+        - ciao-docs-transformer
         - ciao-cda-builder
         - ciao-transport-spine
         - ciao-transport-dts
