@@ -4,7 +4,7 @@
 
 - name: Clean down CIPs on hosts
   hosts: all
-  sudo: True
+  become: True
   tasks:
     - name: Stop all CIP containers
       shell: docker stop {{ item }}
