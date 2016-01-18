@@ -6,7 +6,7 @@
 
 - name: Deploy ciao-docs-finalizer
   hosts: ciaodocsfinalizer
-  sudo: all
+  become: all
   vars:
     cip_name: "ciao-docs-finalizer"
     cip_version: "1.0.0-SNAPSHOT"
@@ -51,7 +51,7 @@
 
 - name: Deploy ciao-transport-dts
   hosts: all
-  sudo: True
+  become: True
   vars:
     cip_name: "ciao-transport-dts"
     cip_version: "1.0.0-SNAPSHOT"
@@ -111,7 +111,7 @@
 
 - name: Deploy ciao-transport-spine
   hosts: all
-  sudo: True
+  become: True
   vars:
     cip_name: "ciao-transport-spine"
     cip_version: "1.0.0-SNAPSHOT"
@@ -184,7 +184,7 @@
 
 - name: Deploy ciao-cda-builder
   hosts: all
-  sudo: True
+  become: True
   vars:
     cip_name: "ciao-cda-builder"
     cip_version: "1.0.0-SNAPSHOT"
@@ -227,7 +227,7 @@
 
 - name: Deploy ciao-docs-transformer
   hosts: all
-  sudo: True
+  become: True
   vars:
     cip_name: "ciao-docs-transformer"
     cip_version: "1.0.0-SNAPSHOT"
@@ -274,7 +274,7 @@
 
 - name: Deploy ciao-docs-enricher
   hosts: all
-  sudo: True
+  become: True
   vars:
     cip_name: "ciao-docs-enricher"
     cip_version: "1.0.0-SNAPSHOT"
@@ -321,7 +321,7 @@
 
 - name: Deploy ciao-docs-parser
   hosts: all
-  sudo: True
+  become: True
   vars:
     cip_name: "ciao-docs-parser"
     cip_version: "1.0.0-SNAPSHOT"

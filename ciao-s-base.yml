@@ -4,7 +4,7 @@
 
 - name: Deploy ansible docker issues workaround
   hosts: all
-  sudo: True
+  become: True
   tasks:
     - name: Install python pip
       apt: name=python-pip state=present update_cache=yes cache_valid_time=3600
@@ -13,7 +13,7 @@
 
 - name: Deploy Nagios
   hosts: all
-  sudo: True
+  become: True
   vars:
     nagios_config_directory: "/opt/ciao_nagios/etc"
     nagios_config_commands_directory: "/opt/ciao_nagios/etc/commands"
@@ -61,7 +61,7 @@
 
 - name: Deploy Nagios host and service configurations for monitoring
   hosts: all
-  sudo: True
+  become: True
   vars_files:
     - ciao-s-base-vars.yml
   tasks:
@@ -77,7 +77,7 @@
 
 - name: Deploy ELK
   hosts: all
-  sudo: True
+  become: True
   vars:
     logstash_config_directory: "/opt/ciao_logstash/conf"
     elastic_data_directory: "/opt/ciao_elastic/data" 
@@ -106,7 +106,7 @@
 
 - name: Deploy Nagios service configurations for monitoring ELK
   hosts: all
-  sudo: True
+  become: True
   vars_files:
     - ciao-s-base-vars.yml
   tasks:
@@ -124,7 +124,7 @@
 
 - name: Deploy etcd Browser
   hosts: all
-  sudo: True
+  become: True
   vars_files:
     - ciao-s-base-vars.yml
   tasks:
@@ -139,7 +139,7 @@
 
 - name: Deploy Nagios service configurations for monitoring etcd Browser
   hosts: all
-  sudo: True
+  become: True
   vars_files:
     - ciao-s-base-vars.yml
   tasks:
@@ -153,7 +153,7 @@
 
 - name: Deploy Logspout
   hosts: all
-  sudo: True
+  become: True
   vars_files:
     - ciao-s-base-vars.yml
   tasks:
@@ -171,7 +171,7 @@
 
 - name: Deploy Nagios service configurations for monitoring logspout
   hosts: all
-  sudo: True
+  become: True
   vars_files:
     - ciao-s-base-vars.yml
   tasks:
@@ -185,7 +185,7 @@
 
 - name: Deploy etcd
   hosts: all
-  sudo: True
+  become: True
   vars:
     etcd_cluster: "etcd-{{ inventory_hostname }}=http://{{ ansible_default_ipv4.address }}:2380"
   vars_files:
@@ -213,7 +213,7 @@
 
 - name: Deploy Nagios service configurations for monitoring etcd
   hosts: all
-  sudo: True
+  become: True
   vars_files:
     - ciao-s-base-vars.yml
   tasks:
@@ -227,7 +227,7 @@
 
 - name: Deploy ActiveMQ
   hosts: all
-  sudo: True
+  become: True
   vars:
     activemq_broker_name: "CiaoBroker"
     activemq_config_directory: "/opt/ciao_activemq/conf"
@@ -272,7 +272,7 @@
 
 - name: Deploy Nagios service configurations for monitoring ActiveMQ
   hosts: all
-  sudo: True
+  become: True
   vars_files:
     - ciao-s-base-vars.yml
   tasks:

@@ -5,7 +5,7 @@
 
 - name: Deploy Spine TKW
   hosts: tkwspine
-  sudo: True
+  become: True
   tasks:
     - name: Install TKW Spine
       docker:
@@ -18,7 +18,7 @@
 
 - name: Deploy ciao-docs-finalizer
   hosts: ciaodocsfinalizer
-  sudo: True
+  become: True
   vars:
     cip_name: "ciao-docs-finalizer"
     cip_version: "1.0.0-SNAPSHOT"
@@ -83,7 +83,7 @@
 
 - name: Deploy ciao-transport-dts
   hosts: ciaotransportdts
-  sudo: True
+  become: True
   vars:
     cip_name: "ciao-transport-dts"
     cip_version: "1.0.0-SNAPSHOT"
@@ -153,7 +153,7 @@
 
 - name: Deploy ciao-transport-spine
   hosts: ciaotransportspine
-  sudo: True
+  become: True
   vars:
     cip_name: "ciao-transport-spine"
     cip_version: "1.0.0-SNAPSHOT"
@@ -236,7 +236,7 @@
 
 - name: Deploy ciao-cda-builder
   hosts: ciaocdabuilder
-  sudo: True
+  become: True
   vars:
     cip_name: "ciao-cda-builder"
     cip_version: "1.0.0-SNAPSHOT"
@@ -279,7 +279,7 @@
 
 - name: Deploy ciao-docs-transformer
   hosts: ciaodocstransformer
-  sudo: True
+  become: True
   vars:
     cip_name: "ciao-docs-transformer"
     cip_version: "1.0.0-SNAPSHOT"
@@ -326,7 +326,7 @@
 
 - name: Deploy ciao-docs-enricher
   hosts: ciaodocsenricher
-  sudo: True
+  become: True
   vars:
     cip_name: "ciao-docs-enricher"
     cip_version: "1.0.0-SNAPSHOT"
@@ -373,7 +373,7 @@
 
 - name: Deploy ciao-docs-parser
   hosts: ciaodocsparser
-  sudo: True
+  become: True
   vars:
     cip_name: "ciao-docs-parser"
     cip_version: "1.0.0-SNAPSHOT"
