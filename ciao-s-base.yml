@@ -52,7 +52,7 @@
       docker:
         name: ciao-nagios
         image: cpuguy83/nagios
-        state: restarted
+        state: {{ docker_state }}
         restart_policy: always
         ports:
         - "8081:80"
@@ -69,11 +69,6 @@
       template: src=templates/host.cfg.j2 dest={{ nagios_config_hosts_directory }}/{{ inventory_hostname }}.cfg
     - name: Install service configurations for host in the CIAO cloud
       template: src=templates/service.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}.cfg
-    - name: Restart Nagios
-      docker:
-        name: ciao-nagios
-        image: cpuguy83/nagios
-        state: restarted
 
 - name: Deploy ELK
   hosts: all
@@ -94,7 +89,7 @@
       docker:
         name: ciao-elk
         image: hscic/ciao-elk
-        state: restarted
+        state: {{ docker_state }}
         restart_policy: always
         ports:
         - "{{ kibana_port }}:80"
@@ -116,11 +111,6 @@
       template: src=templates/elastic.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-elastic.cfg
     - name: Install service configurations for host running kibana
       template: src=templates/kibana.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-kibana.cfg
-    - name: Restart Nagios
-      docker:
-        name: ciao-nagios
-        image: cpuguy83/nagios
-        state: restarted
 
 - name: Deploy etcd Browser
   hosts: all
@@ -132,7 +122,7 @@
       docker:
         name: ciao-etcdbrowser
         image: buddho/etcd-browser
-        state: restarted
+        state: {{ docker_state }}
         restart_policy: always
         ports:
         - "{{ etcd_browser_port }}:8000"
@@ -145,11 +135,6 @@
   tasks:
     - name: Install service configuration for host running etcd Browser
       template: src=templates/etcdbrowser.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-etcdbrowser.cfg
-    - name: Restart Nagios
-      docker:
-        name: ciao-nagios
-        image: cpuguy83/nagios
-        state: restarted
 
 - name: Deploy Logspout
   hosts: all
@@ -161,7 +146,7 @@
       docker:
         name: ciao-logspout
         image: gliderlabs/logspout
-        state: restarted
+        state: {{ docker_state }}
         restart_policy: always
         command: "syslog://{{ ansible_default_ipv4.address }}:514"
         ports:
@@ -177,11 +162,6 @@
   tasks:
     - name: Install service configurations for host running logspout
       template: src=templates/logspout.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-logspout.cfg
-    - name: Restart Nagios
-      docker:
-        name: ciao-nagios
-        image: cpuguy83/nagios
-        state: restarted
 
 - name: Deploy etcd
   hosts: all
@@ -195,7 +175,7 @@
       docker:
         name: ciao-etcd
         image: quay.io/coreos/etcd:v2.0.8
-        state: restarted
+        state: {{ docker_state }}
         restart_policy: always
         ports:
         - "{{ etcd_port }}:4001"
@@ -219,11 +199,6 @@
   tasks:
     - name: Install service configurations for host running etcd
       template: src=templates/etcd.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-etcd.cfg
-    - name: Restart Nagios
-      docker:
-        name: ciao-nagios
-        image: cpuguy83/nagios
-        state: restarted
 
 - name: Deploy ActiveMQ
   hosts: all
@@ -261,7 +236,7 @@
       docker:
         name: ciao-activemq
         image: hscic/ciao-activemq
-        state: restarted
+        state: {{ docker_state }}
         restart_policy: always
         ports:
         - "{{ amqconsole_port }}:8161"
@@ -278,6 +253,13 @@
   tasks:
     - name: Install service configurations for host running ActiveMQ Web Console
       template: src=templates/amqconsole.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-amqconsole.cfg
+
+- name: Restart Nagios
+  hosts: all
+  become: True
+  vars_files:
+    - ciao-s-base-vars.yml
+  tasks:
     - name: Restart Nagios
       docker:
         name: ciao-nagios
