@@ -52,7 +52,7 @@
       docker:
         name: ciao-nagios
         image: cpuguy83/nagios
-        state: {{ docker_state }}
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
         - "8081:80"
@@ -89,7 +89,7 @@
       docker:
         name: ciao-elk
         image: hscic/ciao-elk
-        state: {{ docker_state }}
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
         - "{{ kibana_port }}:80"
@@ -122,7 +122,7 @@
       docker:
         name: ciao-etcdbrowser
         image: buddho/etcd-browser
-        state: {{ docker_state }}
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
         - "{{ etcd_browser_port }}:8000"
@@ -146,7 +146,7 @@
       docker:
         name: ciao-logspout
         image: gliderlabs/logspout
-        state: {{ docker_state }}
+        state: "{{ docker_state }}"
         restart_policy: always
         command: "syslog://{{ ansible_default_ipv4.address }}:514"
         ports:
@@ -175,7 +175,7 @@
       docker:
         name: ciao-etcd
         image: quay.io/coreos/etcd:v2.0.8
-        state: {{ docker_state }}
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
         - "{{ etcd_port }}:4001"
@@ -236,7 +236,7 @@
       docker:
         name: ciao-activemq
         image: hscic/ciao-activemq
-        state: {{ docker_state }}
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
         - "{{ amqconsole_port }}:8161"
