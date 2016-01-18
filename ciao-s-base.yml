@@ -261,7 +261,8 @@
     - ciao-s-base-vars.yml
   tasks:
     - name: Restart Nagios
-      docker:
-        name: ciao-nagios
-        image: cpuguy83/nagios
-        state: restarted
+      command: "docker restart ciao-nagios"
+#      docker:
+#        name: ciao-nagios
+#        image: cpuguy83/nagios
+#        state: restarted
