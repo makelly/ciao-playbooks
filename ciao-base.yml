@@ -52,7 +52,7 @@
       docker:
         name: ciao-nagios
         image: cpuguy83/nagios
-        state: restarted
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
         - "8081:80"
@@ -72,13 +72,6 @@
       with_items: groups.nagios
     - name: Install service configurations for all hosts in the CIAO cloud
       template: src=templates/service.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}.cfg
-      delegate_to: "{{ item }}" 
-      with_items: groups.nagios
-    - name: Restart Nagios
-      docker:
-        name: ciao-nagios
-        image: cpuguy83/nagios
-        state: restarted
       delegate_to: "{{ item }}" 
       with_items: groups.nagios
 
@@ -101,7 +94,7 @@
       docker:
         name: ciao-elk
         image: hscic/ciao-elk
-        state: restarted
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
         - "{{ kibana_port }}:80"
@@ -130,13 +123,6 @@
       template: src=templates/kibana.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-kibana.cfg
       delegate_to: "{{ item }}" 
       with_items: groups.nagios
-    - name: Restart Nagios
-      docker:
-        name: ciao-nagios
-        image: cpuguy83/nagios
-        state: restarted
-      delegate_to: "{{ item }}" 
-      with_items: groups.nagios
 
 - name: Deploy etcd Browser
   hosts: etcdbrowser
@@ -148,7 +134,7 @@
       docker:
         name: ciao-etcdbrowser
         image: buddho/etcd-browser
-        state: restarted
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
         - "{{ etcd_browser_port }}:8000"
@@ -164,13 +150,6 @@
       template: src=templates/etcdbrowser.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-etcdbrowser.cfg
       delegate_to: "{{ item }}" 
       with_items: groups.nagios
-    - name: Restart Nagios
-      docker:
-        name: ciao-nagios
-        image: cpuguy83/nagios
-        state: restarted
-      delegate_to: "{{ item }}" 
-      with_items: groups.nagios
 
 - name: Deploy Logspout
   hosts: logspout
@@ -182,7 +161,7 @@
       docker:
         name: ciao-logspout
         image: gliderlabs/logspout
-        state: restarted
+        state: "{{ docker_state }}"
         restart_policy: always
         command: "{% for host in groups.elk %}syslog://{{ hostvars[host].ansible_default_ipv4.address }}:514{% if not loop.last %},{% endif %}{% endfor %}"
         ports:
@@ -201,13 +180,6 @@
       template: src=templates/logspout.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-logspout.cfg
       delegate_to: "{{ item }}" 
       with_items: groups.nagios
-    - name: Restart Nagios
-      docker:
-        name: ciao-nagios
-        image: cpuguy83/nagios
-        state: restarted
-      delegate_to: "{{ item }}" 
-      with_items: groups.nagios
 
 - name: Deploy etcd cluster
   hosts: etcd
@@ -221,7 +193,7 @@
       docker:
         name: ciao-etcd
         image: quay.io/coreos/etcd:v2.0.8
-        state: restarted
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
         - "{{ etcd_port }}:4001"
@@ -248,13 +220,6 @@
       template: src=templates/etcd.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-etcd.cfg
       delegate_to: "{{ item }}" 
       with_items: groups.nagios
-    - name: Restart Nagios
-      docker:
-        name: ciao-nagios
-        image: cpuguy83/nagios
-        state: restarted
-      delegate_to: "{{ item }}" 
-      with_items: groups.nagios
 
 - name: Deploy ZooKeeper cluster
   hosts: zookeeper
@@ -279,7 +244,7 @@
       docker:
         name: ciao-zookeeper
         image: jplock/zookeeper
-        state: restarted
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
         - "{{ zookeeper_port }}:2181"
@@ -298,13 +263,6 @@
   tasks:
     - name: Install service configurations for all hosts running zookeeper
       template: src=templates/zookeeper.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-zookeeper.cfg
-      delegate_to: "{{ item }}" 
-      with_items: groups.nagios
-    - name: Restart Nagios
-      docker:
-        name: ciao-nagios
-        image: cpuguy83/nagios
-        state: restarted
       delegate_to: "{{ item }}" 
       with_items: groups.nagios
 
@@ -345,7 +303,7 @@
       docker:
         name: ciao-activemq
         image: hscic/ciao-activemq
-        state: restarted
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
         - "{{ amqconsole_port }}:8161"
@@ -365,10 +323,16 @@
       template: src=templates/amqconsole.cfg.j2 dest={{ nagios_config_services_directory }}/{{ inventory_hostname }}-amqconsole.cfg
       delegate_to: "{{ item }}" 
       with_items: groups.nagios
+
+- name: Restart Nagios
+  hosts: nagios
+  become: True
+  vars_files:
+    - ciao-base-vars.yml
+  tasks:
     - name: Restart Nagios
-      docker:
-        name: ciao-nagios
-        image: cpuguy83/nagios
-        state: restarted
-      delegate_to: "{{ item }}" 
-      with_items: groups.nagios
+      command: "docker restart ciao-nagios"
+#      docker:
+#        name: ciao-nagios
+#        image: cpuguy83/nagios
+#        state: restarted

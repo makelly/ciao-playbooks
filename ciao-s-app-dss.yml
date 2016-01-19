@@ -5,8 +5,8 @@
 #
 
 - name: Deploy ciao-docs-finalizer
-  hosts: ciaodocsfinalizer
-  become: all
+  hosts: all
+  become: True
   vars:
     cip_name: "ciao-docs-finalizer"
     cip_version: "1.0.0-SNAPSHOT"
@@ -37,7 +37,7 @@
       docker:
         name: ciao-docs-finalizer
         image: hscic/ciao-docs-finalizer
-        state: restarted
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
 # Placeholder for potential JMX port
@@ -60,6 +60,7 @@
     ciao_folder: "/opt/ciao-trasnsport-dts"
   vars_files:
     - ciao-s-base-vars.yml
+    - ciao-s-app-dss-vars.yml
   tasks:     
     - name: Set configuration items in etcd
       shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
@@ -97,7 +98,7 @@
       docker:
         name: ciao-transport-dts
         image: hscic/ciao-transport-dts
-        state: restarted
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
 # Placeholder for potential JMX port
@@ -120,6 +121,7 @@
     keystore_folder: "/opt/keystores"
   vars_files:
     - ciao-s-base-vars.yml
+    - ciao-s-app-dss-vars.yml
   tasks:     
     - name: Set configuration items in etcd
       shell: curl {{ etcd_path }}{{ item.key }} -XPUT -d value="{{ item.value }}"
@@ -170,7 +172,7 @@
       docker:
         name: ciao-transport-spine
         image: hscic/ciao-transport-spine
-        state: restarted
+        state: {{ docker_state }}
         restart_policy: always
         ports:
         - "{{ spine_receive_port }}:{{ spine_receive_port }}"
@@ -215,7 +217,7 @@
       docker:
         name: ciao-cda-builder
         image: hscic/ciao-cda-builder
-        state: restarted
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
 # Placeholder for potential JMX port
@@ -262,7 +264,7 @@
       docker:
         name: ciao-docs-transformer
         image: hscic/ciao-docs-transformer
-        state: restarted
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
 # Placeholder for potential JMX port
@@ -308,7 +310,7 @@
       docker:
         name: ciao-docs-enricher
         image: hscic/ciao-docs-enricher
-        state: restarted
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
 # Placeholder for potential JMX port
@@ -373,7 +375,7 @@
       docker:
         name: ciao-docs-parser
         image: hscic/ciao-docs-parser
-        state: restarted
+        state: "{{ docker_state }}"
         restart_policy: always
         ports:
 # Placeholder for potential JMX port
